@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>观局树洞 - 投稿</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>📮 向树洞说说话</h1>
+        <textarea id="contentInput" placeholder="你的心事..." maxlength="500" required></textarea>
+        
+        <div class="public-toggle">
+            <input type="checkbox" id="publicCheck" checked>
+            <label for="publicCheck">匿名公开到留言墙（可被回复）</label>
+        </div>
+        
+        <button id="submitBtn">投入树洞</button>
+        
+        <div id="resultBox" style="display:none;">
+            <p>✅ 已投入树洞！请务必保存你的暗号，用于查看回复：</p>
+            <div class="secret-code" id="secretDisplay"></div>
+            <p class="warning">⚠️ 暗号仅显示一次，关闭页面后无法找回</p>
+        </div>
+        
+        <p class="links">
+            <a href="wall.html">去看看留言墙</a> | <a href="lookup.html">我有暗号，查回复</a>
+        </p>
+    </div>
+    
+    <script src="js/supabase-client.js"></script>
+    <script>
+        function generateSecret() {
+            return Math.random().toString(36).substring(2, 10);
+        }
+
+        document.getElementById('submitBtn').addEventListener('click', async () => {
+            const content = document.getElementById('contentInput').value.trim();
+            if (!content) return alert('请写点什么吧');
+            
+            const isPublic = document.getElementById('publicCheck').checked;
+            const secret = generateSecret();
+
+            const { error } = await supabaseClient
+                .from('posts')
+                .insert([{ content, is_public: isPublic, secret_code: secret }]);
+
+            if (error) {
+                alert('投稿失败，请重试');
+                console.error(error);
+                return;
+            }
+
+            document.getElementById('resultBox').style.display = 'block';
+            document.getElementById('secretDisplay').textContent = secret;
+            document.getElementById('contentInput').value = '';
+            document.getElementById('publicCheck').checked = true;
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,152 @@
+body {
+    font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: #f5f0eb;
+    color: #3a3a3a;
+    margin: 0;
+    padding: 20px;
+}
+.container {
+    max-width: 500px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
+h1 {
+    text-align: center;
+    color: #5b7a5c;
+    font-weight: 400;
+}
+.subtitle {
+    text-align: center;
+    color: #888;
+    margin-top: -10px;
+}
+textarea {
+    width: 100%;
+    height: 150px;
+    border: 1px solid #d1ccc0;
+    border-radius: 12px;
+    padding: 15px;
+    font-size: 16px;
+    resize: none;
+    background: #faf8f5;
+    box-sizing: border-box;
+}
+.public-toggle {
+    margin: 15px 0;
+    display: flex;
+    align-items: center;
+}
+.public-toggle label {
+    margin-left: 8px;
+    font-size: 14px;
+    color: #555;
+}
+button {
+    background: #5b7a5c;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 30px;
+    font-size: 16px;
+    cursor: pointer;
+    width: 100%;
+    margin: 10px 0;
+}
+button:active {
+    background: #3e5a40;
+}
+.secret-code {
+    font-size: 28px;
+    letter-spacing: 5px;
+    background: #e8f0e4;
+    padding: 10px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: bold;
+    margin: 10px 0;
+}
+.warning {
+    color: #c44536;
+    font-size: 14px;
+}
+.links {
+    text-align: center;
+    margin-top: 20px;
+}
+.links a {
+    color: #5b7a5c;
+    margin: 0 10px;
+    text-decoration: none;
+}
+.post-card {
+    background: #fafaf7;
+    border-radius: 16px;
+    padding: 20px;
+    margin: 15px 0;
+}
+.post-content {
+    font-size: 17px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+.official-reply {
+    background: #e8f0e4;
+    border-left: 4px solid #5b7a5c;
+    padding: 12px;
+    margin-top: 12px;
+    border-radius: 0 8px 8px 0;
+}
+.official-reply span {
+    font-weight: bold;
+    color: #5b7a5c;
+}
+.post-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #999;
+    font-size: 13px;
+    margin-top: 10px;
+}
+.resonate-btn {
+    background: none;
+    border: 1px solid #ddd;
+    padding: 4px 12px;
+    border-radius: 20px;
+    color: #999;
+    width: auto;
+    cursor: pointer;
+}
+.resonate-btn:disabled {
+    color: #e0867e;
+    border-color: #e0867e;
+}
+.admin-post-card {
+    background: #f0f0f0;
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 10px;
+}
+.replyInput {
+    width: 100%;
+    margin: 5px 0;
+    padding: 8px;
+    box-sizing: border-box;
+}
+input[type="text"], input[type="email"], input[type="password"] {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    border: 1px solid #d1ccc0;
+    border-radius: 8px;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+.no-reply {
+    color: #bbb;
+    font-style: italic;
+    font-size: 14px;
+}

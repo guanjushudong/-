@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>观局树洞 - 查回复</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 查找我的回复</h1>
+        <input type="text" id="secretInput" placeholder="输入你的8位暗号" maxlength="8">
+        <button id="searchBtn">查询</button>
+        <div id="resultCard" style="display:none;"></div>
+        <p class="links">
+            <a href="index.html">再次投稿</a> | <a href="wall.html">留言墙</a>
+        </p>
+    </div>
+    
+    <script src="js/supabase-client.js"></script>
+    <script>
+        document.getElementById('searchBtn').addEventListener('click', async () => {
+            const code = document.getElementById('secretInput').value.trim();
+            if (!code) return alert('请输入暗号');
+            
+            const { data, error } = await supabaseClient.rpc('get_my_post', { code });
+            
+            const card = document.getElementById('resultCard');
+            if (error || !data || data.length === 0) {
+                card.style.display = 'block';
+                card.innerHTML = '<p>未找到该暗号对应的投稿，请检查暗号是否正确。</p>';
+                return;
+            }
+            
+            const post = data[0];
+            card.style.display = 'block';
+            card.innerHTML = `
+                <div class="post-card">
+                    <p class="post-content">${escapeHtml(post.content)}</p>
+                    ${post.reply 
+                        ? `<div class="official-reply"><span>官方回复：</span>${escapeHtml(post.reply)}</div>` 
+                        : '<p class="no-reply">暂未回复，请耐心等待 ⏳</p>'}
+                    <p class="post-meta">${new Date(post.created_at).toLocaleDateString()}</p>
+                </div>
+            `;
+        });
+
+        function escapeHtml(text) {
+            return text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+    </script>
+</body>
+</html>

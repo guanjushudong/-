@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>观局树洞 - 管理后台</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="container" id="loginBox">
+        <h1>管理员登录</h1>
+        <input type="email" id="email" placeholder="邮箱">
+        <input type="password" id="password" placeholder="密码">
+        <button id="loginBtn">登录</button>
+    </div>
+
+    <div class="container" id="adminPanel" style="display:none;">
+        <h1>📋 投稿管理</h1>
+        <button id="logoutBtn">退出</button>
+        <div id="adminPostsList"></div>
+    </div>
+    
+    <script src="js/supabase-client.js"></script>
+    <script>
+        let authUser = null;
+
+        supabaseClient.auth.getSession().then(({ data: { session } }) => {
+            if (session) {
+                authUser = session.user;
+                showAdminPanel();
+            }
+        });
+
+        document.getElementById('loginBtn').addEventListener('click', async () => {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            if (error) return alert('登录失败：' + error.message);
+            authUser = data.user;
+            showAdminPanel();
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            await supabaseClient.auth.signOut();
+            location.reload();
+        });
+
+        function showAdminPanel() {
+            document.getElementById('loginBox').style.display = 'none';
+            document.getElementById('adminPanel').style.display = 'block';
+            loadAllPosts();
+        }
+
+        async function loadAllPosts() {
+            const { data, error } = await supabaseClient
+                .from('posts')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) return alert('加载失败');
+            const list = document.getElementById('adminPostsList');
+            list.innerHTML = '';
+            
+            data.forEach(post => {
+                const item = document.createElement('div');
+                item.className = 'admin-post-card';
+                item.innerHTML = `
+                    <p><strong>[${post.is_public ? '公开' : '私密'}]</strong> ${escapeHtml(post.content)}</p>
+                    <p>暗号：<code>${post.secret_code}</code></p>
+                    <p>回复：${post.reply ? escapeHtml(post.reply) : '（无）'}</p>
+                    <textarea class="replyInput" id="reply-${post.id}" placeholder="输入回复...">${post.reply || ''}</textarea>
+                    <button onclick="submitReply(${post.id})">保存回复</button>
+                    <hr>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        window.submitReply = async (postId) => {
+            const replyText = document.getElementById(`reply-${postId}`).value.trim();
+            if (!replyText) return alert('回复不能为空');
+            const { error } = await supabaseClient
+                .from('posts')
+                .update({ reply: replyText })
+                .eq('id', postId);
+            if (error) alert('更新失败');
+            else {
+                alert('回复已保存！');
+                loadAllPosts();
+            }
+        };
+
+        function escapeHtml(text) {
+            return text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+    </script>
+</body>
+</html>

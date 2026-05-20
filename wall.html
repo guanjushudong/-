@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>观局树洞 - 心事墙</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>🧱 心事墙</h1>
+        <p class="subtitle">每一张纸条，都可能被温柔回应</p>
+        <div id="postsContainer"></div>
+        <p class="links">
+            <a href="index.html">我也要投稿</a> | <a href="lookup.html">查回复</a>
+        </p>
+    </div>
+    
+    <script src="js/supabase-client.js"></script>
+    <script>
+        async function loadWall() {
+            const { data, error } = await supabaseClient
+                .from('posts')
+                .select('id,content,reply,created_at')
+                .eq('is_public', true)
+                .order('created_at', { ascending: false })
+                .limit(50);
+
+            if (error) {
+                console.error(error);
+                return;
+            }
+
+            const container = document.getElementById('postsContainer');
+            container.innerHTML = '';
+            
+            data.forEach(post => {
+                const card = document.createElement('div');
+                card.className = 'post-card';
+                const date = new Date(post.created_at).toLocaleDateString();
+                
+                card.innerHTML = `
+                    <p class="post-content">${escapeHtml(post.content)}</p>
+                    ${post.reply 
+                        ? `<div class="official-reply"><span>官方回复：</span>${escapeHtml(post.reply)}</div>` 
+                        : '<p class="no-reply">等待回应...</p>'}
+                    <div class="post-meta">
+                        <span>${date}</span>
+                        <button class="resonate-btn" data-id="${post.id}">🤍 共鸣</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            document.querySelectorAll('.resonate-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    this.innerHTML = '❤️ 共鸣';
+                    this.disabled = true;
+                });
+            });
+        }
+
+        function escapeHtml(text) {
+            return text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        loadWall();
+
+        supabaseClient
+            .channel('public-posts')
+            .on('postgres_changes', 
+                { event: 'INSERT', schema: 'public', table: 'posts', filter: 'is_public=eq.true' }, 
+                () => loadWall()
+            )
+            .subscribe();
+    </script>
+</body>
+</html>
