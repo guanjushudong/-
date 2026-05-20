@@ -10,14 +10,15 @@
 <body>
     <div class="container" id="loginBox">
         <h1>CHOOSE C 管理员登录</h1>
+        <p class="subtitle">管理 CHOOSE C 树洞所有投稿</p>
         <input type="email" id="email" placeholder="邮箱">
         <input type="password" id="password" placeholder="密码">
-        <button id="loginBtn">登录</button>
+        <button id="loginBtn">登录后台</button>
     </div>
 
     <div class="container" id="adminPanel" style="display:none;">
-        <h1>📋 CHOOSE C 投稿管理</h1>
-        <button id="logoutBtn">退出</button>
+        <h1>📋 CHOOSE C 树洞 · 投稿管理</h1>
+        <button id="logoutBtn">退出登录</button>
         <div id="adminPostsList"></div>
     </div>
     
@@ -58,7 +59,7 @@
                 .select('*')
                 .order('created_at', { ascending: false });
 
-            if (error) return alert('加载失败');
+            if (error) return alert('加载 CHOOSE C 树洞投稿失败');
             const list = document.getElementById('adminPostsList');
             list.innerHTML = '';
             
@@ -67,9 +68,9 @@
                 item.className = 'admin-post-card';
                 item.innerHTML = `
                     <p><strong>[${post.is_public ? '公开' : '私密'}]</strong> ${escapeHtml(post.content)}</p>
-                    <p>暗号：<code>${post.secret_code}</code></p>
-                    <p>回复：${post.reply ? escapeHtml(post.reply) : '（无）'}</p>
-                    <textarea class="replyInput" id="reply-${post.id}" placeholder="输入回复...">${post.reply || ''}</textarea>
+                    <p>树洞暗号：<code>${post.secret_code}</code></p>
+                    <p>CHOOSE C 回复：${post.reply ? escapeHtml(post.reply) : '（无）'}</p>
+                    <textarea class="replyInput" id="reply-${post.id}" placeholder="输入 CHOOSE C 树洞回复...">${post.reply || ''}</textarea>
                     <button onclick="submitReply(${post.id})">保存回复</button>
                     <hr>
                 `;
@@ -86,7 +87,7 @@
                 .eq('id', postId);
             if (error) alert('更新失败');
             else {
-                alert('回复已保存！');
+                alert('CHOOSE C 树洞回复已保存！');
                 loadAllPosts();
             }
         };

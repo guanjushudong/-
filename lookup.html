@@ -10,11 +10,12 @@
 <body>
     <div class="container">
         <h1>🔍 CHOOSE C 查找我的回复</h1>
+        <p class="subtitle">查询你投入 CHOOSE C 树洞的心事回复</p>
         <input type="text" id="secretInput" placeholder="输入你的8位暗号" maxlength="8">
-        <button id="searchBtn">查询</button>
+        <button id="searchBtn">查询回复</button>
         <div id="resultCard" style="display:none;"></div>
         <p class="links">
-            <a href="index.html">再次投稿</a> | <a href="wall.html">留言墙</a>
+            <a href="index.html">再次投入 CHOOSE C 树洞</a> | <a href="wall.html">CHOOSE C 心事墙</a>
         </p>
     </div>
     
@@ -22,14 +23,14 @@
     <script>
         document.getElementById('searchBtn').addEventListener('click', async () => {
             const code = document.getElementById('secretInput').value.trim();
-            if (!code) return alert('请输入暗号');
+            if (!code) return alert('请输入暗号，查询 CHOOSE C 树洞回复');
             
             const { data, error } = await supabaseClient.rpc('get_my_post', { code });
             
             const card = document.getElementById('resultCard');
             if (error || !data || data.length === 0) {
                 card.style.display = 'block';
-                card.innerHTML = '<p>未找到该暗号对应的投稿，请检查暗号是否正确。</p>';
+                card.innerHTML = '<p>未找到该暗号对应的 CHOOSE C 树洞投稿，请检查暗号是否正确。</p>';
                 return;
             }
             
@@ -40,7 +41,7 @@
                     <p class="post-content">${escapeHtml(post.content)}</p>
                     ${post.reply 
                         ? `<div class="official-reply"><span>CHOOSE C 回复：</span>${escapeHtml(post.reply)}</div>` 
-                        : '<p class="no-reply">暂未回复，请耐心等待 ⏳</p>'}
+                        : '<p class="no-reply">CHOOSE C 暂未回复，请耐心等待 ⏳</p>'}
                     <p class="post-meta">${new Date(post.created_at).toLocaleDateString()}</p>
                 </div>
             `;

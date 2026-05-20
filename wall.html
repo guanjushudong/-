@@ -10,10 +10,10 @@
 <body>
     <div class="container">
         <h1>🧱 CHOOSE C 心事墙</h1>
-        <p class="subtitle">每一张纸条，都可能被温柔回应</p>
+        <p class="subtitle">每一张纸条，都可能被 CHOOSE C 温柔回应</p>
         <div id="postsContainer"></div>
         <p class="links">
-            <a href="index.html">我也要投稿</a> | <a href="lookup.html">查回复</a>
+            <a href="index.html">向 CHOOSE C 树洞倾诉</a> | <a href="lookup.html">查回复</a>
         </p>
     </div>
     
@@ -44,7 +44,7 @@
                     <p class="post-content">${escapeHtml(post.content)}</p>
                     ${post.reply 
                         ? `<div class="official-reply"><span>CHOOSE C 回复：</span>${escapeHtml(post.reply)}</div>` 
-                        : '<p class="no-reply">等待回应...</p>'}
+                        : '<p class="no-reply">等待 CHOOSE C 回应...</p>'}
                     <div class="post-meta">
                         <span>${date}</span>
                         <button class="resonate-btn" data-id="${post.id}">🤍 共鸣</button>
