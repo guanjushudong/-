@@ -1,13 +1,31 @@
-/* 观局树洞 | 纯CSS海报质感 · 无外部图片版 */
+/* CHOOSE C树洞 | 海报质感 + 全套动画增强版 */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
+/* 全局入场动画 */
+@keyframes pageFadeIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes glowPulse {
+    0% { box-shadow: 0 0 8px rgba(255,255,255,0.15); }
+    50% { box-shadow: 0 0 16px rgba(255,255,255,0.25); }
+    100% { box-shadow: 0 0 8px rgba(255,255,255,0.15); }
+}
+@keyframes secretShine {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+@keyframes cardFloat {
+    from { transform: translateY(0); }
+    to { transform: translateY(-4px); }
+}
+
 body {
     font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-    /* 纯CSS渐变海报背景，多层光影模拟高级暗调海报 */
     background: 
         radial-gradient(circle at 20% 10%, rgba(90, 115, 92, 0.3) 0%, transparent 45%),
         radial-gradient(circle at 80% 85%, rgba(120, 100, 90, 0.25) 0%, transparent 50%),
@@ -16,9 +34,10 @@ body {
     min-height: 100vh;
     padding: 20px;
     background-attachment: fixed;
+    animation: pageFadeIn 0.8s ease-out;
 }
 
-/* 磨砂玻璃核心卡片，海报质感 */
+/* 磨砂玻璃卡片 + 入场动画 */
 .container {
     max-width: 520px;
     margin: 40px auto;
@@ -31,6 +50,11 @@ body {
     box-shadow: 
         0 8px 32px rgba(0, 0, 0, 0.35),
         0 0 0 1px rgba(255, 255, 255, 0.05);
+    animation: pageFadeIn 1s ease-out;
+    transition: all 0.3s ease;
+}
+.container:hover {
+    box-shadow: 0 12px 40px rgba(0,0,0,0.4);
 }
 
 h1 {
@@ -41,6 +65,7 @@ h1 {
     font-size: 28px;
     letter-spacing: 2px;
     text-shadow: 0 2px 12px rgba(0,0,0,0.3);
+    animation: pageFadeIn 1.2s ease-out;
 }
 
 .subtitle {
@@ -49,9 +74,10 @@ h1 {
     font-size: 14px;
     margin-bottom: 28px;
     letter-spacing: 1px;
+    animation: pageFadeIn 1.4s ease-out;
 }
 
-/* 输入框 */
+/* 输入框 + 聚焦发光动画 */
 textarea {
     width: 100%;
     height: 165px;
@@ -62,18 +88,18 @@ textarea {
     resize: none;
     background: rgba(255, 255, 255, 0.05);
     color: #fff;
-    transition: all 0.3s ease;
+    transition: all 0.4s ease;
     margin-bottom: 18px;
+    animation: pageFadeIn 1.6s ease-out;
 }
-
 textarea::placeholder {
     color: rgba(255,255,255,0.55);
 }
-
 textarea:focus {
     outline: none;
     border-color: rgba(255, 255, 255, 0.4);
     background: rgba(255, 255, 255, 0.09);
+    box-shadow: 0 0 20px rgba(110, 135, 112, 0.25);
 }
 
 /* 公开开关 */
@@ -82,20 +108,20 @@ textarea:focus {
     align-items: center;
     margin: 15px 0 22px;
     gap: 10px;
+    animation: pageFadeIn 1.8s ease-out;
 }
-
 .public-toggle input {
     width: 18px;
     height: 18px;
     accent-color: #8fa38f;
+    cursor: pointer;
 }
-
 .public-toggle label {
     font-size: 15px;
     color: rgba(255,255,255,0.85);
 }
 
-/* 海报质感按钮 */
+/* 按钮：悬浮上浮+发光动画 */
 button {
     background: linear-gradient(135deg, rgba(110, 135, 112, 0.35), rgba(90, 110, 92, 0.25));
     backdrop-filter: blur(8px);
@@ -106,22 +132,26 @@ button {
     font-size: 16px;
     cursor: pointer;
     width: 100%;
-    transition: all 0.3s ease;
+    transition: all 0.4s ease;
     font-weight: 500;
     letter-spacing: 1px;
+    animation: pageFadeIn 2s ease-out;
 }
-
 button:hover {
     background: linear-gradient(135deg, rgba(110, 135, 112, 0.45), rgba(90, 110, 92, 0.35));
-    transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+button:active {
+    transform: translateY(0);
 }
 
-/* 暗号展示 */
+/* 暗号：流光闪烁动画 */
 .secret-code {
     font-size: 30px;
     letter-spacing: 8px;
-    background: rgba(255,255,255,0.12);
+    background: linear-gradient(90deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0.12) 100%);
+    background-size: 200% auto;
     color: #fff;
     padding: 14px;
     border-radius: 14px;
@@ -129,6 +159,7 @@ button:hover {
     font-weight: bold;
     margin: 18px 0;
     border: 1px dashed rgba(255,255,255,0.25);
+    animation: secretShine 2.5s linear infinite, pageFadeIn 2.2s ease-out;
 }
 
 .warning {
@@ -136,6 +167,7 @@ button:hover {
     font-size: 14px;
     text-align: center;
     margin-top: 10px;
+    animation: pageFadeIn 2.4s ease-out;
 }
 
 /* 导航链接 */
@@ -144,21 +176,21 @@ button:hover {
     margin-top: 32px;
     padding-top: 22px;
     border-top: 1px solid rgba(255,255,255,0.12);
+    animation: pageFadeIn 2.6s ease-out;
 }
-
 .links a {
     color: rgba(255,255,255,0.8);
     margin: 0 14px;
     text-decoration: none;
     font-size: 15px;
-    transition: color 0.2s;
+    transition: all 0.3s ease;
 }
-
 .links a:hover {
     color: #fff;
+    text-shadow: 0 0 8px rgba(255,255,255,0.4);
 }
 
-/* 留言墙玻璃卡片 */
+/* 留言卡片：悬浮微动+入场动画 */
 .post-card {
     background: rgba(255, 255, 255, 0.06);
     backdrop-filter: blur(10px);
@@ -166,6 +198,13 @@ button:hover {
     border-radius: 20px;
     padding: 24px;
     margin: 20px 0;
+    transition: all 0.4s ease;
+    animation: pageFadeIn 0.6s ease-out;
+}
+.post-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    border-color: rgba(255,255,255,0.2);
 }
 
 .post-content {
@@ -182,8 +221,8 @@ button:hover {
     padding: 15px;
     margin-top: 14px;
     border-radius: 0 12px 12px 0;
+    transition: all 0.3s ease;
 }
-
 .official-reply span {
     font-weight: bold;
     color: #d1e2d1;
@@ -213,11 +252,15 @@ button:hover {
     width: auto;
     border-radius: 20px;
     padding: 5px 14px;
+    transition: all 0.3s ease;
 }
-
+.resonate-btn:hover {
+    background: rgba(255,255,255,0.15);
+}
 .resonate-btn:disabled {
     color: #ff9c9c;
     border-color: #ff9c9c;
+    background: rgba(255,156,156,0.1);
 }
 
 /* 通用输入框 */
@@ -232,10 +275,15 @@ input[type="password"] {
     background: rgba(255,255,255,0.05);
     color: #fff;
     font-size: 16px;
+    transition: all 0.4s ease;
 }
-
 input::placeholder {
     color: rgba(255,255,255,0.55);
+}
+input:focus {
+    outline: none;
+    border-color: rgba(255,255,255,0.4);
+    box-shadow: 0 0 15px rgba(110,135,112,0.2);
 }
 
 /* 管理员页面 */
@@ -244,6 +292,10 @@ input::placeholder {
     border-radius: 18px;
     padding: 22px;
     margin: 16px 0;
+    transition: all 0.3s ease;
+}
+.admin-post-card:hover {
+    background: rgba(255,255,255,0.12);
 }
 
 .replyInput {
@@ -252,9 +304,13 @@ input::placeholder {
     color: #fff;
     border-radius: 12px;
     padding: 12px;
+    transition: all 0.3s ease;
+}
+.replyInput:focus {
+    border-color: rgba(255,255,255,0.35);
 }
 
-/* 手机完美适配 */
+/* 手机适配 */
 @media (max-width: 480px) {
     .container {
         margin: 22px auto;

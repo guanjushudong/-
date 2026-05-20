@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>观局树洞 - 心事墙</title>
+    <title>CHOOSE C树洞 - 心事墙</title>
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <div class="container">
-        <h1>🧱 心事墙</h1>
+        <h1>🧱 CHOOSE C 心事墙</h1>
         <p class="subtitle">每一张纸条，都可能被温柔回应</p>
         <div id="postsContainer"></div>
         <p class="links">
@@ -43,7 +43,7 @@
                 card.innerHTML = `
                     <p class="post-content">${escapeHtml(post.content)}</p>
                     ${post.reply 
-                        ? `<div class="official-reply"><span>官方回复：</span>${escapeHtml(post.reply)}</div>` 
+                        ? `<div class="official-reply"><span>CHOOSE C 回复：</span>${escapeHtml(post.reply)}</div>` 
                         : '<p class="no-reply">等待回应...</p>'}
                     <div class="post-meta">
                         <span>${date}</span>

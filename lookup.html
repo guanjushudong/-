@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>观局树洞 - 查回复</title>
+    <title>CHOOSE C树洞 - 查回复</title>
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <div class="container">
-        <h1>🔍 查找我的回复</h1>
+        <h1>🔍 CHOOSE C 查找我的回复</h1>
         <input type="text" id="secretInput" placeholder="输入你的8位暗号" maxlength="8">
         <button id="searchBtn">查询</button>
         <div id="resultCard" style="display:none;"></div>
@@ -39,7 +39,7 @@
                 <div class="post-card">
                     <p class="post-content">${escapeHtml(post.content)}</p>
                     ${post.reply 
-                        ? `<div class="official-reply"><span>官方回复：</span>${escapeHtml(post.reply)}</div>` 
+                        ? `<div class="official-reply"><span>CHOOSE C 回复：</span>${escapeHtml(post.reply)}</div>` 
                         : '<p class="no-reply">暂未回复，请耐心等待 ⏳</p>'}
                     <p class="post-meta">${new Date(post.created_at).toLocaleDateString()}</p>
                 </div>

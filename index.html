@@ -3,24 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>观局树洞 - 投稿</title>
+    <title>CHOOSE C树洞 - 投稿</title>
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <div class="container">
-        <h1>📮 向树洞说说话</h1>
+        <h1>📮 CHOOSE C 树洞</h1>
+        <p class="subtitle">把心事悄悄说给我们听</p>
         <textarea id="contentInput" placeholder="你的心事..." maxlength="500" required></textarea>
         
         <div class="public-toggle">
             <input type="checkbox" id="publicCheck" checked>
             <label for="publicCheck">匿名公开到留言墙（可被回复）</label>
-        </div>
-
-        <!-- 新增：公众号授权勾选框 -->
-        <div class="public-toggle">
-            <input type="checkbox" id="publishCheck">
-            <label for="publishCheck">✅ 允许官方将我的内容匿名发布到公众号文章</label>
         </div>
         
         <button id="submitBtn">投入树洞</button>
@@ -47,18 +42,11 @@
             if (!content) return alert('请写点什么吧');
             
             const isPublic = document.getElementById('publicCheck').checked;
-            // 获取授权状态
-            const allowPublish = document.getElementById('publishCheck').checked;
             const secret = generateSecret();
 
             const { error } = await supabaseClient
                 .from('posts')
-                .insert([{ 
-                    content, 
-                    is_public: isPublic, 
-                    secret_code: secret,
-                    allow_publish: allowPublish  // 存入授权状态
-                }]);
+                .insert([{ content, is_public: isPublic, secret_code: secret }]);
 
             if (error) {
                 alert('投稿失败，请重试');
@@ -70,7 +58,6 @@
             document.getElementById('secretDisplay').textContent = secret;
             document.getElementById('contentInput').value = '';
             document.getElementById('publicCheck').checked = true;
-            document.getElementById('publishCheck').checked = false;
         });
     </script>
 </body>

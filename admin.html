@@ -3,20 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>观局树洞 - 管理后台</title>
+    <title>CHOOSE C树洞 - 管理后台</title>
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <div class="container" id="loginBox">
-        <h1>管理员登录</h1>
+        <h1>CHOOSE C 管理员登录</h1>
         <input type="email" id="email" placeholder="邮箱">
         <input type="password" id="password" placeholder="密码">
         <button id="loginBtn">登录</button>
     </div>
 
     <div class="container" id="adminPanel" style="display:none;">
-        <h1>📋 投稿管理</h1>
+        <h1>📋 CHOOSE C 投稿管理</h1>
         <button id="logoutBtn">退出</button>
         <div id="adminPostsList"></div>
     </div>
@@ -65,12 +65,9 @@
             data.forEach(post => {
                 const item = document.createElement('div');
                 item.className = 'admin-post-card';
-                // 显示公众号授权状态
-                const publishStatus = post.allow_publish ? '✅ 已授权公众号发布' : '❌ 未授权公众号发布';
                 item.innerHTML = `
                     <p><strong>[${post.is_public ? '公开' : '私密'}]</strong> ${escapeHtml(post.content)}</p>
                     <p>暗号：<code>${post.secret_code}</code></p>
-                    <p>${publishStatus}</p>
                     <p>回复：${post.reply ? escapeHtml(post.reply) : '（无）'}</p>
                     <textarea class="replyInput" id="reply-${post.id}" placeholder="输入回复...">${post.reply || ''}</textarea>
                     <button onclick="submitReply(${post.id})">保存回复</button>
