@@ -65,9 +65,12 @@
             data.forEach(post => {
                 const item = document.createElement('div');
                 item.className = 'admin-post-card';
+                // 显示公众号授权状态
+                const publishStatus = post.allow_publish ? '✅ 已授权公众号发布' : '❌ 未授权公众号发布';
                 item.innerHTML = `
                     <p><strong>[${post.is_public ? '公开' : '私密'}]</strong> ${escapeHtml(post.content)}</p>
                     <p>暗号：<code>${post.secret_code}</code></p>
+                    <p>${publishStatus}</p>
                     <p>回复：${post.reply ? escapeHtml(post.reply) : '（无）'}</p>
                     <textarea class="replyInput" id="reply-${post.id}" placeholder="输入回复...">${post.reply || ''}</textarea>
                     <button onclick="submitReply(${post.id})">保存回复</button>
