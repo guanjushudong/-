@@ -3,192 +3,142 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>我要倾诉 | CHOOSE C树洞</title>
-    <link rel="stylesheet" href="css/style.css">
+    <title>我要倾诉</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: "PingFang SC", "Microsoft YaHei", "微软雅黑", sans-serif;
+            margin:0; padding:0; box-sizing:border-box;
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
             -webkit-tap-highlight-color: transparent;
-            color: var(--text-main, #4a3c30);
         }
         :root {
             --bg-main: #38322d;
-            --text-main: #fff8f0;
-            --text-sub: #e6d9cc;
-            --text-card: #fff8f0;
-            --border-color: rgba(255, 240, 225, 0.22);
-            --btn-primary: rgba(201,168,137,0.65);
+            --text-primary: #fff8f0;
+            --text-secondary: #e6d9cc;
+            --border-color: rgba(255,240,225,0.22);
+            --btn-bg: rgba(201,168,137,0.65);
         }
         [data-theme="day"] {
             --bg-main: #f8efe8;
-            --text-main: #4a3c30;
-            --text-sub: #6d5b4b;
-            --text-card: #4a3c30;
-            --border-color: rgba(160, 125, 95, 0.3);
-            --btn-primary: rgba(201,168,137,0.8);
+            --text-primary: #4a3c30;
+            --text-secondary: #6d5b4b;
+            --border-color: rgba(160,125,95,0.3);
+            --btn-bg: rgba(201,168,137,0.8);
         }
         body {
-            background: var(--bg-main, #f8efe8);
-            margin: 0;
+            background: var(--bg-main);
             padding: 20px 16px;
             min-height: 100vh;
-            transition: background 0.6s ease, color 0.6s ease;
+            transition: background 0.6s;
         }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        h1 {
-            text-align: center;
-            margin-bottom: 10px;
-            font-size: 24px;
-        }
-        .subtitle {
-            text-align: center;
-            color: var(--text-sub);
-            margin-bottom: 24px;
-            font-size: 14px;
-        }
+        .container { max-width:800px; margin:0 auto; }
+        h1 { text-align:center; color:var(--text-primary); margin-bottom:10px; }
+        .subtitle { text-align:center; color:var(--text-secondary); margin-bottom:24px; }
         textarea {
-            width: 100%;
-            min-height: 160px;
-            padding: 14px;
-            border-radius: 18px;
-            background: rgba(255,255,255,0.08);
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-            font-size: 15px;
-            resize: none;
-            margin-bottom: 20px;
+            width:100%; min-height:160px; padding:14px; border-radius:18px;
+            background:rgba(255,255,255,0.08); border:1px solid var(--border-color);
+            color:var(--text-primary); font-size:15px; resize:none;
         }
-        .category-group { margin: 16px 0; }
-        .category-title { color: var(--text-sub); font-size: 14px; margin-bottom: 10px; }
-        .category-list { display: flex; gap: 10px; flex-wrap: wrap; }
+        .category-group { margin:16px 0; }
+        .category-title { color:var(--text-secondary); margin-bottom:10px; }
+        .category-list { display:flex; gap:10px; flex-wrap:wrap; }
         .category-item {
-            padding: 8px 16px;
-            border: 1px solid var(--border-color);
-            border-radius: 18px;
-            color: var(--text-main);
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.3s;
+            padding:8px 16px; border:1px solid var(--border-color); border-radius:18px;
+            color:var(--text-primary); cursor:pointer;
         }
-        .category-item.active { background: rgba(201,168,137,0.6); border-color: rgba(201,168,137,0.8); }
-        .public-toggle { margin: 10px 0; display: flex; align-items: center; gap:8px; font-size:14px; }
+        .category-item.active {
+            background:rgba(201,168,137,0.6); color:#fff;
+        }
+        .public-toggle {
+            display:flex; align-items:center; gap:8px;
+            margin:10px 0; color:var(--text-primary);
+        }
         .slider {
-            width: 100%;
-            max-width: 320px;
-            height: 44px;
-            background: rgba(255,255,255,0.12);
-            border-radius: 22px;
-            position: relative;
-            overflow: hidden;
-            margin:20px auto;
-            touch-action: none; /* 关键修复 */
+            width:100%; max-width:320px; height:44px;
+            background:rgba(255,255,255,0.12); border-radius:22px;
+            position:relative; margin:20px auto; touch-action:none;
         }
         .slider-block {
-            width: 64px; height: 44px;
-            background: rgba(201,168,137,0.7);
-            border-radius: 22px;
-            position: absolute; left: 0; top: 0;
-            cursor: grab;
-            display: flex; align-items: center; justify-content: center;
-            color: #fff; font-size: 14px;
-            touch-action: none; /* 关键修复 */
+            width:64px; height:44px; background:rgba(201,168,137,0.7);
+            border-radius:22px; position:absolute; left:0; top:0;
+            display:flex; align-items:center; justify-content:center;
+            color:#fff; cursor:grab; touch-action:none;
         }
         .slider-text {
-            position: absolute; width: 100%;
-            text-align: center; color: var(--text-sub);
-            line-height: 44px; font-size: 14px;
+            position:absolute; width:100%; text-align:center;
+            color:var(--text-secondary); line-height:44px;
         }
         #submitBtn {
-            width: 100%;
-            padding: 16px;
-            background: var(--btn-primary);
-            border: none;
-            border-radius: 22px;
-            color: #fff;
-            font-size: 17px;
-            cursor: pointer;
+            width:100%; padding:16px; background:var(--btn-bg);
+            border:none; border-radius:22px; color:#fff; font-size:17px; cursor:pointer;
         }
-        #resultBox { display:none; text-align:center; margin-top:20px; }
-        .secret-wrap { display:flex; gap:12px; align-items:center; justify-content:center; margin:10px 0; }
-        .copy-btn { padding:8px 16px; background:rgba(201,168,137,0.4); border-radius:20px; color:#fff; cursor:pointer; }
-        .links { text-align:center; margin-top:20px; font-size:14px; }
-        .links a { color:var(--text-sub); text-decoration:none; }
+        #resultBox { display:none; text-align:center; margin-top:20px; color:var(--text-primary); }
+        .copy-btn {
+            padding:8px 16px; background:rgba(201,168,137,0.4);
+            border-radius:20px; color:#fff; cursor:pointer; border:none;
+        }
+        .links { text-align:center; margin-top:20px; }
+        .links a { color:var(--text-secondary); text-decoration:none; }
     </style>
 </head>
 <body>
 <div class="container">
     <h1>📮 我要倾诉</h1>
-    <p class="subtitle">向 CHOOSE C 树洞，悄悄诉说心事</p>
-    <textarea id="contentInput" placeholder="写下你的心事，投入树洞..." maxlength="500"></textarea>
+    <p class="subtitle">匿名投稿，温柔倾听</p>
+    <textarea id="contentInput" maxlength="500" placeholder="写下你的心事..."></textarea>
 
     <div class="category-group">
-        <div class="category-title">选择帖子分类：</div>
+        <div class="category-title">选择分类</div>
         <div class="category-list">
-            <div class="category-item active" data-cate="心情">😊 心情</div>
-            <div class="category-item" data-cate="烦恼">😔 烦恼</div>
-            <div class="category-item" data-cate="祝福">✨ 祝福</div>
-            <div class="category-item" data-cate="日常">📝 日常</div>
-            <div class="category-item" data-cate="情感">❤️ 情感</div>
+            <div class="category-item active" data-cate="心情">心情</div>
+            <div class="category-item" data-cate="烦恼">烦恼</div>
+            <div class="category-item" data-cate="祝福">祝福</div>
+            <div class="category-item" data-cate="日常">日常</div>
+            <div class="category-item" data-cate="情感">情感</div>
         </div>
     </div>
 
     <div class="public-toggle">
         <input type="checkbox" id="publicCheck" checked>
-        <label for="publicCheck">匿名公开到心事墙</label>
+        <label>公开到心事墙</label>
     </div>
     <div class="public-toggle">
-        <input type="checkbox" id="commentCheck">
-        <label for="commentCheck">开放评论功能</label>
-    </div>
-    <div class="public-toggle">
-        <input type="checkbox" id="articleCheck">
-        <label for="articleCheck">允许发布到公众号</label>
+        <input type="checkbox" id="commentCheck" checked>
+        <label>开放评论</label>
     </div>
 
     <div class="slider">
-        <div class="slider-text">拖动滑块完成验证（验证后播放BGM）</div>
+        <div class="slider-text">滑动验证（验证后播放BGM）</div>
         <div class="slider-block">→</div>
     </div>
 
-    <button id="submitBtn">投入树洞</button>
+    <button id="submitBtn">提交投稿</button>
 
     <div id="resultBox">
-        <p>✅ 投稿成功！请保存你的暗号：</p>
-        <div class="secret-wrap">
-            <div id="secretDisplay"></div>
-            <button class="copy-btn" id="copyBtn">复制暗号</button>
+        <p>✅ 投稿成功！你的暗号：</p>
+        <div style="margin:10px 0;">
+            <span id="secretDisplay"></span>
+            <button class="copy-btn" onclick="copy()">复制</button>
         </div>
-        <p>⚠️ 暗号仅显示一次，丢失无法找回</p>
+        <p>⚠️ 请妥善保存</p>
     </div>
 
     <p class="links"><a href="wall.html">← 返回心事墙</a></p>
 </div>
 
-<audio id="bgmAudio" loop preload="auto">
+<audio id="bgmAudio" loop></audio>
 <script src="js/supabase-client.js"></script>
 <script>
-    const VERIFY_DAY = 24 * 60 * 60 * 1000;
-    function checkVerify() {
-        const last = localStorage.getItem('verifyTime');
-        return last && Date.now() - last < VERIFY_DAY;
+    const VERIFY = 24*60*60*1000;
+    if(!localStorage.getItem('verifyTime') || Date.now()-localStorage.getItem('verifyTime')>VERIFY){
+        location.href='wall.html';
     }
-    if(!checkVerify()) location.href='wall.html';
 
-    function setDayNightTheme() {
-        const hour = new Date().getHours();
-        const isDay = hour >=6 && hour <18;
-        document.body.setAttribute('data-theme', isDay ? 'day' : 'night');
-        document.documentElement.style.setProperty('--bg-main', isDay ? '#f8efe8' : '#38322d');
-        document.documentElement.style.setProperty('--text-main', isDay ? '#4a3c30' : '#fff8f0');
+    function setTheme(){
+        const h = new Date().getHours();
+        document.body.dataset.theme = h>=6&&h<18 ? 'day' : 'night';
     }
-    setDayNightTheme();
+    setTheme();
 
     const bgmList = {
         "心情":"https://assets.mixkit.co/sfx/preview/mixkit-dreamy-night-time-ambience-1170.mp3",
@@ -197,134 +147,72 @@
         "日常":"https://assets.mixkit.co/sfx/preview/mixkit-relaxing-piano-ambience-1168.mp3",
         "情感":"https://assets.mixkit.co/sfx/preview/mixkit-romantic-piano-ambience-1171.mp3"
     };
-    const bgmAudio = document.getElementById('bgmAudio');
-    let isBgmPlay = false;
-    function changeBGM(cate){ bgmAudio.src=bgmList[cate]; if(isBgmPlay) bgmAudio.play(); }
-
-    let forbiddenWords = [];
+    const audio = document.getElementById('bgmAudio');
     let verifyPass = false;
-    let selectedCategory = "心情";
-    const POST_LIMIT = 60;
+    let cate = "心情";
 
-    async function loadForbiddenWords(){
-        try{const res=await fetch('./违禁词.txt');const text=await res.text();forbiddenWords=text.split(/\r?\n/).map(w=>w.trim()).filter(w=>w);}catch(e){}
-    }
-    function checkBadWords(str){ return forbiddenWords.some(w=>str.toLowerCase().includes(w.toLowerCase())); }
-
-    // 滑块验证修复版
-    const slider=document.querySelector('.slider');
-    const block=document.querySelector('.slider-block');
-    let isMove=false;
-    let startX=0;
-
-    // pointer事件（最佳兼容性）
-    block.addEventListener('pointerdown', (e) => {
-        isMove=true;
-        startX = e.clientX - block.getBoundingClientRect().left;
-        block.setPointerCapture(e.pointerId);
-        e.preventDefault();
-    });
-
-    document.addEventListener('pointermove', (e) => {
-        if(!isMove)return;
-        e.preventDefault(); // 关键修复
-        const sliderRect = slider.getBoundingClientRect();
-        let x = e.clientX - sliderRect.left - startX;
-        
-        if(x>0 && x < sliderRect.width - block.offsetWidth) {
-            block.style.left = x + 'px';
-        }
-        if(x >= sliderRect.width - block.offsetWidth) {
-            verifyPass=true;
-            block.style.left = sliderRect.width - block.offsetWidth + 'px';
-            document.querySelector('.slider-text').textContent='✅ 验证成功，BGM已开启';
-            isBgmPlay=true;
-            bgmAudio.play();
-            isMove=false;
-        }
-    });
-
-    document.addEventListener('pointerup', (e) => {
-        if(isMove) {
-            block.releasePointerCapture(e.pointerId);
-            isMove=false;
-            if(!verifyPass) block.style.left = '0px';
-        }
-    });
-
-    // 触摸事件兼容
-    block.addEventListener('touchstart', (e) => {
-        isMove=true;
-        startX = e.touches[0].clientX - block.getBoundingClientRect().left;
-        e.preventDefault();
-    });
-
-    document.addEventListener('touchmove', (e) => {
-        if(!isMove)return;
-        e.preventDefault(); // 关键修复
-        const sliderRect = slider.getBoundingClientRect();
-        let x = e.touches[0].clientX - sliderRect.left - startX;
-        
-        if(x>0 && x < sliderRect.width - block.offsetWidth) {
-            block.style.left = x + 'px';
-        }
-        if(x >= sliderRect.width - block.offsetWidth) {
-            verifyPass=true;
-            block.style.left = sliderRect.width - block.offsetWidth + 'px';
-            document.querySelector('.slider-text').textContent='✅ 验证成功，BGM已开启';
-            isBgmPlay=true;
-            bgmAudio.play();
-            isMove=false;
-        }
-    });
-
-    document.addEventListener('touchend', () => {
-        if(isMove && !verifyPass) {
-            block.style.left = '0px';
-            isMove=false;
-        }
-    });
-
-    document.querySelectorAll('.category-item').forEach(item=>{
-        item.addEventListener('click',()=>{
-            document.querySelectorAll('.category-item').forEach(i=>i.classList.remove('active'));
-            item.classList.add('active');
-            selectedCategory=item.dataset.cate;
-            changeBGM(selectedCategory);
-        });
-    });
-
-    document.getElementById('copyBtn').onclick=async()=>{
-        await navigator.clipboard.writeText(document.getElementById('secretDisplay').innerText);
-        alert('暗号复制成功！');
+    function changeBGM(c){
+        audio.src = bgmList[c];
+        audio.volume = 0.3;
+        if(verifyPass) audio.play().catch(()=>{});
     }
 
-    document.getElementById('submitBtn').onclick=async()=>{
-        const content=document.getElementById('contentInput').value.trim();
-        if(!content)return alert('请输入心事内容');
-        if(checkBadWords(content))return alert('请文明倾诉');
-        if(!verifyPass)return alert('请完成滑块验证');
+    const slider = document.querySelector('.slider');
+    const block = document.querySelector('.slider-block');
+    let isMove=false, startX=0;
 
-        const last=localStorage.getItem('lastPostTime');
-        const now=Date.now()/1000;
-        if(last&&now-last<POST_LIMIT)return alert(`请等待${Math.ceil(POST_LIMIT-(now-last))}秒`);
+    block.addEventListener('pointerdown', e=>{
+        isMove=true; startX=e.clientX-block.getBoundingClientRect().left;
+        block.setPointerCapture(e.pointerId); e.preventDefault();
+    });
+    document.addEventListener('pointermove', e=>{
+        if(!isMove)return; e.preventDefault();
+        const r = slider.getBoundingClientRect();
+        let x = e.clientX - r.left - startX;
+        if(x>0 && x < r.width-block.offsetWidth) block.style.left=x+'px';
+        if(x >= r.width-block.offsetWidth){
+            verifyPass=true; block.style.left = r.width-block.offsetWidth+'px';
+            document.querySelector('.slider-text').textContent='✅ 验证成功';
+            audio.play().catch(()=>{});
+            isMove=false;
+        }
+    });
+    document.addEventListener('pointerup', e=>{
+        if(isMove){ block.releasePointerCapture(e.pointerId); isMove=false; if(!verifyPass) block.style.left='0px'; }
+    });
 
-        const secret=Math.random().toString(36).slice(2,10);
-        const {error}=await supabaseClient.from('posts').insert([{
-            content,tag:selectedCategory,
-            is_public:document.getElementById('publicCheck').checked,
-            is_comment_open:document.getElementById('commentCheck').checked,
-            allow_article:document.getElementById('articleCheck').checked,
-            secret_code:secret,like_count:0,replies:[]
+    document.querySelectorAll('.category-item').forEach(i=>{
+        i.onclick=()=>{
+            document.querySelectorAll('.category-item').forEach(x=>x.classList.remove('active'));
+            i.classList.add('active'); cate=i.dataset.cate; changeBGM(cate);
+        }
+    });
+
+    async function submit(){
+        const c = contentInput.value.trim();
+        if(!c)return alert('请输入内容');
+        if(!verifyPass)return alert('请完成验证');
+
+        const secret = Math.random().toString(36).slice(2,10);
+        await supabaseClient.from('posts').insert([{
+            content:c, tag:cate,
+            is_public:publicCheck.checked,
+            is_comment_open:commentCheck.checked,
+            secret_code:secret, like_count:0, replies:[]
         }]);
-        if(error){alert('投稿失败');return;}
-        localStorage.setItem('lastPostTime',now);
-        document.getElementById('resultBox').style.display='block';
-        document.getElementById('secretDisplay').textContent=secret;
-        document.getElementById('contentInput').value='';
-    };
-    loadForbiddenWords();
-    changeBGM(selectedCategory);
+
+        resultBox.style.display='block';
+        secretDisplay.innerText=secret;
+        contentInput.value='';
+    }
+
+    function copy(){
+        navigator.clipboard.writeText(secretDisplay.innerText);
+        alert('复制成功');
+    }
+
+    submitBtn.onclick = submit;
+    changeBGM(cate);
 </script>
 </body>
 </html>
