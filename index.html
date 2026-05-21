@@ -2,42 +2,122 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>我要倾诉 | CHOOSE C树洞</title>
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "PingFang SC", "Microsoft YaHei", "微软雅黑", sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            color: var(--text-main, #4a3c30);
+        }
         :root {
             --bg-main: #38322d;
-            --bg-radial1: rgba(201, 168, 137, 0.28);
-            --bg-radial2: rgba(180, 145, 120, 0.22);
-            --text-main: #ffffff;
-            --text-sub: rgba(255,240,225,0.75);
-            --border-color: rgba(255, 240, 225, 0.18);
-            --glow-color: rgba(212,184,153,0.25);
-            --particle-opacity: 0.75;
+            --text-main: #fff8f0;
+            --text-sub: #e6d9cc;
+            --text-card: #fff8f0;
+            --border-color: rgba(255, 240, 225, 0.22);
+            --btn-primary: rgba(201,168,137,0.65);
         }
         [data-theme="day"] {
             --bg-main: #f8efe8;
-            --bg-radial1: rgba(221, 186, 156, 0.2);
-            --bg-radial2: rgba(200, 160, 130, 0.18);
-            --text-main: #332c26;
-            --text-sub: rgba(80,65,50,0.75);
-            --border-color: rgba(200, 165, 135, 0.25);
-            --glow-color: rgba(212,184,153,0.35);
-            --particle-opacity: 0.6;
+            --text-main: #4a3c30;
+            --text-sub: #6d5b4b;
+            --text-card: #4a3c30;
+            --border-color: rgba(160, 125, 95, 0.3);
+            --btn-primary: rgba(201,168,137,0.8);
         }
-        .copy-btn{padding:8px 16px;background:rgba(201,168,137,0.4);border:1px solid rgba(230,205,185,0.35);border-radius:20px;color:var(--text-main);font-size:14px;cursor:pointer;transition:0.3s;}
-        .copy-btn:hover{background:rgba(201,168,137,0.6);transform:scale(1.05);}
-        .secret-wrap{display:flex;gap:12px;align-items:center;justify-content:center;margin:10px 0;}
-        .slider{width:100%;height:40px;background:rgba(255,255,255,0.1);border-radius:20px;position:relative;margin:20px 0;overflow:hidden;}
-        .slider-block{width:60px;height:40px;background:rgba(201,168,137,0.6);border-radius:20px;position:absolute;left:0;top:0;cursor:grab;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;}
-        .slider-text{position:absolute;width:100%;text-align:center;color:var(--text-sub);line-height:40px;}
-        .category-group{margin: 16px 0;}
-        .category-title{color: var(--text-sub); font-size: 14px; margin-bottom: 10px;}
-        .category-list{display: flex; gap: 10px; flex-wrap: wrap;}
-        .category-item{padding: 8px 16px; border: 1px solid var(--border-color); border-radius: 18px; color: var(--text-main); font-size: 14px; cursor: pointer; transition: all 0.3s;}
-        .category-item.active{background: rgba(201,168,137,0.6); border-color: rgba(201,168,137,0.8);}
+        body {
+            background: var(--bg-main, #f8efe8);
+            margin: 0;
+            padding: 20px 16px;
+            min-height: 100vh;
+            transition: background 0.6s ease, color 0.6s ease;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+        .subtitle {
+            text-align: center;
+            color: var(--text-sub);
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+        textarea {
+            width: 100%;
+            min-height: 160px;
+            padding: 14px;
+            border-radius: 18px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            font-size: 15px;
+            resize: none;
+            margin-bottom: 20px;
+        }
+        .category-group { margin: 16px 0; }
+        .category-title { color: var(--text-sub); font-size: 14px; margin-bottom: 10px; }
+        .category-list { display: flex; gap: 10px; flex-wrap: wrap; }
+        .category-item {
+            padding: 8px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            color: var(--text-main);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .category-item.active { background: rgba(201,168,137,0.6); border-color: rgba(201,168,137,0.8); }
+        .public-toggle { margin: 10px 0; display: flex; align-items: center; gap:8px; font-size:14px; }
+        .slider {
+            width: 100%;
+            max-width: 320px;
+            height: 44px;
+            background: rgba(255,255,255,0.12);
+            border-radius: 22px;
+            position: relative;
+            overflow: hidden;
+            margin:20px auto;
+        }
+        .slider-block {
+            width: 64px; height: 44px;
+            background: rgba(201,168,137,0.7);
+            border-radius: 22px;
+            position: absolute; left: 0; top: 0;
+            cursor: grab;
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: 14px;
+        }
+        .slider-text {
+            position: absolute; width: 100%;
+            text-align: center; color: var(--text-sub);
+            line-height: 44px; font-size: 14px;
+        }
+        #submitBtn {
+            width: 100%;
+            padding: 16px;
+            background: var(--btn-primary);
+            border: none;
+            border-radius: 22px;
+            color: #fff;
+            font-size: 17px;
+            cursor: pointer;
+        }
+        #resultBox { display:none; text-align:center; margin-top:20px; }
+        .secret-wrap { display:flex; gap:12px; align-items:center; justify-content:center; margin:10px 0; }
+        .copy-btn { padding:8px 16px; background:rgba(201,168,137,0.4); border-radius:20px; color:#fff; cursor:pointer; }
+        .links { text-align:center; margin-top:20px; font-size:14px; }
+        .links a { color:var(--text-sub); text-decoration:none; }
     </style>
 </head>
 <body>
@@ -77,22 +157,21 @@
 
     <button id="submitBtn">投入树洞</button>
 
-    <div id="resultBox" style="display:none;">
-        <p>✅ 投稿成功！请务必保存你的暗号：</p>
+    <div id="resultBox">
+        <p>✅ 投稿成功！请保存你的暗号：</p>
         <div class="secret-wrap">
-            <div class="secret-code" id="secretDisplay"></div>
-            <button class="copy-btn" id="copyBtn">一键复制暗号</button>
+            <div id="secretDisplay"></div>
+            <button class="copy-btn" id="copyBtn">复制暗号</button>
         </div>
-        <p class="warning">⚠️ 暗号仅显示一次，关闭页面无法找回</p>
+        <p>⚠️ 暗号仅显示一次，丢失无法找回</p>
     </div>
 
-    <p class="links"><a href="wall.html">返回心事墙</a></p>
+    <p class="links"><a href="wall.html">← 返回心事墙</a></p>
 </div>
 
 <audio id="bgmAudio" loop preload="auto">
 <script src="js/supabase-client.js"></script>
 <script>
-    // 未验证直接跳转回首页验证
     const VERIFY_DAY = 24 * 60 * 60 * 1000;
     function checkVerify() {
         const last = localStorage.getItem('verifyTime');
@@ -100,96 +179,91 @@
     }
     if(!checkVerify()) location.href='wall.html';
 
-    // 日夜模式
     function setDayNightTheme() {
         const hour = new Date().getHours();
-        document.body.setAttribute('data-theme', hour >=6 && hour <18 ? 'day' : 'night');
+        const isDay = hour >=6 && hour <18;
+        document.body.setAttribute('data-theme', isDay ? 'day' : 'night');
+        document.documentElement.style.setProperty('--bg-main', isDay ? '#f8efe8' : '#38322d');
+        document.documentElement.style.setProperty('--text-main', isDay ? '#4a3c30' : '#fff8f0');
     }
     setDayNightTheme();
 
-    // 分类BGM
     const bgmList = {
-        "心情": "https://assets.mixkit.co/sfx/preview/mixkit-dreamy-night-time-ambience-1170.mp3",
-        "烦恼": "https://assets.mixkit.co/sfx/preview/mixkit-sad-piano-melody-1169.mp3",
-        "祝福": "https://assets.mixkit.co/sfx/preview/mixkit-happy-bells-notification-937.mp3",
-        "日常": "https://assets.mixkit.co/sfx/preview/mixkit-relaxing-piano-ambience-1168.mp3",
-        "情感": "https://assets.mixkit.co/sfx/preview/mixkit-romantic-piano-ambience-1171.mp3"
+        "心情":"https://assets.mixkit.co/sfx/preview/mixkit-dreamy-night-time-ambience-1170.mp3",
+        "烦恼":"https://assets.mixkit.co/sfx/preview/mixkit-sad-piano-melody-1169.mp3",
+        "祝福":"https://assets.mixkit.co/sfx/preview/mixkit-happy-bells-notification-937.mp3",
+        "日常":"https://assets.mixkit.co/sfx/preview/mixkit-relaxing-piano-ambience-1168.mp3",
+        "情感":"https://assets.mixkit.co/sfx/preview/mixkit-romantic-piano-ambience-1171.mp3"
     };
     const bgmAudio = document.getElementById('bgmAudio');
     let isBgmPlay = false;
-    function changeBGM(cate) { bgmAudio.src = bgmList[cate]; if(isBgmPlay) bgmAudio.play(); }
+    function changeBGM(cate){ bgmAudio.src=bgmList[cate]; if(isBgmPlay) bgmAudio.play(); }
 
     let forbiddenWords = [];
     let verifyPass = false;
     let selectedCategory = "心情";
     const POST_LIMIT = 60;
 
-    async function loadForbiddenWords() {
-        try {
-            const res = await fetch('./违禁词.txt');
-            const text = await res.text();
-            forbiddenWords = text.split(/\r?\n/).map(w => w.trim()).filter(w => w);
-        } catch (e) {}
+    async function loadForbiddenWords(){
+        try{const res=await fetch('./违禁词.txt');const text=await res.text();forbiddenWords=text.split(/\r?\n/).map(w=>w.trim()).filter(w=>w);}catch(e){}
     }
-    function checkBadWords(str) { return forbiddenWords.some(w => str.toLowerCase().includes(w.toLowerCase())); }
+    function checkBadWords(str){ return forbiddenWords.some(w=>str.toLowerCase().includes(w.toLowerCase())); }
 
-    const slider = document.querySelector('.slider');
-    const block = document.querySelector('.slider-block');
-    let isMove = false;
-    block.addEventListener('mousedown', () => isMove = true);
-    document.addEventListener('mousemove', (e) => {
-        if (!isMove) return;
-        let x = e.clientX - slider.offsetLeft;
-        if (x > 0 && x < slider.offsetWidth - 60) block.style.left = x + 'px';
-        if (x >= slider.offsetWidth - 60) {
-            verifyPass = true;
-            block.style.left = slider.offsetWidth - 60 + 'px';
-            document.querySelector('.slider-text').textContent = '✅ 验证成功，BGM已开启';
-            isBgmPlay = true; bgmAudio.play();
+    const slider=document.querySelector('.slider');
+    const block=document.querySelector('.slider-block');
+    let isMove=false;
+    block.addEventListener('mousedown touchstart',()=>isMove=true);
+    document.addEventListener('mousemove touchmove',(e)=>{
+        if(!isMove)return;
+        const touch=e.touches?e.touches[0]:e;
+        let x=touch.clientX-slider.getBoundingClientRect().left;
+        if(x>0&&x<slider.offsetWidth-64)block.style.left=x+'px';
+        if(x>=slider.offsetWidth-64){
+            verifyPass=true;
+            block.style.left=slider.offsetWidth-64+'px';
+            document.querySelector('.slider-text').textContent='✅ 验证成功，BGM已开启';
+            isBgmPlay=true;bgmAudio.play();
         }
     });
-    document.addEventListener('mouseup', () => isMove = false);
+    document.addEventListener('mouseup touchend',()=>isMove=false);
 
-    document.querySelectorAll('.category-item').forEach(item => {
-        item.addEventListener('click', () => {
-            document.querySelectorAll('.category-item').forEach(i => i.classList.remove('active'));
+    document.querySelectorAll('.category-item').forEach(item=>{
+        item.addEventListener('click',()=>{
+            document.querySelectorAll('.category-item').forEach(i=>i.classList.remove('active'));
             item.classList.add('active');
-            selectedCategory = item.dataset.cate;
+            selectedCategory=item.dataset.cate;
             changeBGM(selectedCategory);
         });
     });
 
-    document.getElementById('copyBtn').onclick = async () => {
+    document.getElementById('copyBtn').onclick=async()=>{
         await navigator.clipboard.writeText(document.getElementById('secretDisplay').innerText);
-        alert('✅ 暗号复制成功！请妥善保存~');
+        alert('暗号复制成功！');
     }
 
-    document.getElementById('submitBtn').onclick = async () => {
-        const content = document.getElementById('contentInput').value.trim();
-        if (!content) return alert('请输入你的心事内容~');
-        if (checkBadWords(content)) return alert('请文明倾诉后重新提交~');
-        if (!verifyPass) return alert('请完成滑块验证~');
+    document.getElementById('submitBtn').onclick=async()=>{
+        const content=document.getElementById('contentInput').value.trim();
+        if(!content)return alert('请输入心事内容');
+        if(checkBadWords(content))return alert('请文明倾诉');
+        if(!verifyPass)return alert('请完成滑块验证');
 
-        const lastPostTime = localStorage.getItem('lastPostTime');
-        const nowTime = Date.now() / 1000;
-        if (lastPostTime && nowTime - lastPostTime < POST_LIMIT) {
-            return alert(`发帖频繁！请${Math.ceil(POST_LIMIT - (nowTime - lastPostTime))}秒后再试~`);
-        }
+        const last=localStorage.getItem('lastPostTime');
+        const now=Date.now()/1000;
+        if(last&&now-last<POST_LIMIT)return alert(`请等待${Math.ceil(POST_LIMIT-(now-last))}秒`);
 
-        const secretCode = Math.random().toString(36).slice(2, 10);
-        const { error } = await supabaseClient.from('posts').insert([{
-            content, tag: selectedCategory,
-            is_public: document.getElementById('publicCheck').checked,
-            is_comment_open: document.getElementById('commentCheck').checked,
-            allow_article: document.getElementById('articleCheck').checked,
-            secret_code: secretCode, like_count: 0, replies: []
+        const secret=Math.random().toString(36).slice(2,10);
+        const {error}=await supabaseClient.from('posts').insert([{
+            content,tag:selectedCategory,
+            is_public:document.getElementById('publicCheck').checked,
+            is_comment_open:document.getElementById('commentCheck').checked,
+            allow_article:document.getElementById('articleCheck').checked,
+            secret_code:secret,like_count:0,replies:[]
         }]);
-
-        if (error) { alert('投稿失败，请稍后重试~'); return; }
-        localStorage.setItem('lastPostTime', nowTime);
-        document.getElementById('resultBox').style.display = 'block';
-        document.getElementById('secretDisplay').textContent = secretCode;
-        document.getElementById('contentInput').value = '';
+        if(error){alert('投稿失败');return;}
+        localStorage.setItem('lastPostTime',now);
+        document.getElementById('resultBox').style.display='block';
+        document.getElementById('secretDisplay').textContent=secret;
+        document.getElementById('contentInput').value='';
     };
     loadForbiddenWords();
     changeBGM(selectedCategory);

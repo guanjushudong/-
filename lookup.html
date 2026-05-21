@@ -2,41 +2,72 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>查回复/删帖</title>
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "PingFang SC", "Microsoft YaHei", "微软雅黑", sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            color: var(--text-main, #4a3c30);
+        }
         :root {
             --bg-main: #38322d;
-            --text-main: #ffffff;
-            --text-sub: rgba(255,240,225,0.75);
-            --border-color: rgba(255, 240, 225, 0.18);
+            --text-main: #fff8f0;
+            --text-sub: #e6d9cc;
+            --text-card: #fff8f0;
+            --border-color: rgba(255, 240, 225, 0.22);
         }
         [data-theme="day"] {
             --bg-main: #f8efe8;
-            --text-main: #332c26;
-            --text-sub: rgba(80,65,50,0.75);
-            --border-color: rgba(200, 165, 135, 0.25);
+            --text-main: #4a3c30;
+            --text-sub: #6d5b4b;
+            --text-card: #4a3c30;
+            --border-color: rgba(160, 125, 95, 0.3);
         }
-        body {background:var(--bg-main);color:var(--text-main);}
-        .del-btn{background:#ff4444;border:none;color:#fff;padding:5px 10px;border-radius:10px;cursor:pointer;margin-top:10px;}
-        .comment-item{background:rgba(255,255,255,0.05);padding:8px 12px;border-radius:10px;margin:5px 0;font-size:14px;color:var(--text-main);}
-        input{background:rgba(255,255,255,0.05);border:1px solid var(--border-color);color:var(--text-main);}
+        body {
+            background: var(--bg-main, #f8efe8);
+            margin: 0;
+            padding: 20px 16px;
+            min-height: 100vh;
+        }
+        .container { max-width:800px;margin:0 auto; }
+        h1 { text-align:center;margin-bottom:20px; }
+        input {
+            width:100%;padding:14px;border-radius:20px;
+            background:rgba(255,255,255,0.08);border:1px solid var(--border-color);
+            color:var(--text-main);margin-bottom:16px;font-size:15px;
+        }
+        button {
+            width:100%;padding:14px;border-radius:20px;border:none;
+            background:rgba(201,168,137,0.6);color:#fff;font-size:16px;cursor:pointer;
+        }
+        #result { margin-top:24px; }
+        .post-card {
+            background:rgba(255,255,255,0.08);border:1px solid var(--border-color);
+            border-radius:20px;padding:20px;margin:16px 0;color:var(--text-card);
+        }
+        .del-btn { background:#ff4d4f;border:none;color:#fff;padding:8px 14px;border-radius:12px;margin-top:10px;cursor:pointer; }
+        .comment-item { background:rgba(255,255,255,0.08);padding:10px 14px;border-radius:14px;margin:8px 0; }
+        .links { text-align:center;margin-top:30px;font-size:14px; }
+        .links a { color:var(--text-sub);text-decoration:none; }
     </style>
 </head>
 <body>
 <div class="container">
     <h1>🔍 查回复 / 删帖</h1>
-    <input type="text" id="secretInput" placeholder="输入你的暗号" style="width:100%;padding:12px;border-radius:20px;margin:20px 0;">
-    <button onclick="searchPost()" style="width:100%;">查询</button>
-    <div id="result" style="margin-top:20px;"></div>
-    <p class="links"><a href="wall.html">返回心事墙</a></p>
+    <input type="text" id="secretInput" placeholder="输入你的投稿暗号">
+    <button onclick="searchPost()">查询</button>
+    <div id="result"></div>
+    <p class="links"><a href="wall.html">← 返回心事墙</a></p>
 </div>
 
 <script src="js/supabase-client.js"></script>
 <script>
-    // 未验证跳转
     const VERIFY_DAY = 24 * 60 * 60 * 1000;
     function checkVerify() {
         const last = localStorage.getItem('verifyTime');
@@ -44,37 +75,33 @@
     }
     if(!checkVerify()) location.href='wall.html';
 
-    // 日夜模式
     function setDayNightTheme() {
         const hour = new Date().getHours();
-        document.body.setAttribute('data-theme', hour >=6 && hour <18 ? 'day' : 'night');
+        const isDay = hour >=6 && hour <18;
+        document.body.setAttribute('data-theme', isDay ? 'day' : 'night');
     }
     setDayNightTheme();
 
     async function searchPost() {
-        const secret = document.getElementById('secretInput').value.trim();
-        if (!secret) return alert('请输入暗号');
-        const { data } = await supabaseClient.from('posts').select('*').eq('secret_code', secret).single();
-        if (!data) return alert('未找到该帖子');
-        
-        const replies = Array.isArray(data.replies) ? data.replies : [];
-        document.getElementById('result').innerHTML = `
-            <div class="post-card">
-                <div>【${data.tag}】</div>
-                <div class="post-content">${data.content}</div>
-                <div class="post-meta">点赞：${data.like_count}</div>
-                <div style="margin:10px 0;"><b>评论：</b>${replies.map(r=>`<div class="comment-item">${r.content || r}</div>`).join('')||'暂无评论'}</div>
-                <button class="del-btn" onclick="deletePost(${data.id},'${secret}')">🗑️ 删帖</button>
-            </div>
-        `;
+        const secret=document.getElementById('secretInput').value.trim();
+        if(!secret)return alert('请输入暗号');
+        const {data}=await supabaseClient.from('posts').select('*').eq('secret_code',secret).single();
+        if(!data){document.getElementById('result').innerHTML='<p style="text-align:center;">未找到该投稿</p>';return;}
+        const replies=Array.isArray(data.replies)?data.replies:[];
+        document.getElementById('result').innerHTML=`
+        <div class="post-card">
+            <div>【${data.tag}】</div>
+            <div style="margin:10px 0;">${data.content}</div>
+            <div>点赞：${data.like_count}</div>
+            <div style="margin-top:10px;"><b>评论：</b>${replies.map(r=>`<div class="comment-item">${r.content||r}</div>`).join('')||'暂无评论'}</div>
+            <button class="del-btn" onclick="deletePost(${data.id},'${secret}')">🗑️ 删除投稿</button>
+        </div>`;
     }
-
-    async function deletePost(id, secret) {
-        if (confirm('确定删除该帖子？')) {
-            const { error } = await supabaseClient.from('posts').delete().eq('id', id).eq('secret_code', secret);
-            error ? alert('删除失败') : alert('删除成功！');
-            document.getElementById('result').innerHTML = '';
-        }
+    async function deletePost(id,secret){
+        if(!confirm('确定删除？删除后不可恢复'))return;
+        const {error}=await supabaseClient.from('posts').delete().eq('id',id).eq('secret_code',secret);
+        if(error)alert('删除失败');
+        else{alert('删除成功');document.getElementById('result').innerHTML='';document.getElementById('secretInput').value='';}
     }
 </script>
 </body>

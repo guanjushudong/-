@@ -2,27 +2,24 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <!-- 强制手机端完美缩放适配 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CHOOSE C 心事墙</title>
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* 全局温暖圆润字体 + 基础重置 */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             font-family: "PingFang SC", "Microsoft YaHei", "微软雅黑", sans-serif;
-            -webkit-tap-highlight-color: transparent; /* 去除手机点击高亮 */
-            color: var(--text-main, #4a3c30); /* 增加fallback值，确保文字可见 */
+            -webkit-tap-highlight-color: transparent;
+            color: var(--text-main, #4a3c30);
         }
         :root {
-            /* 夜晚模式 - 深背景+浅暖文字 */
             --bg-main: #38322d;
-            --text-main: #fff8f0; /* 主文字色 */
-            --text-sub: #e6d9cc; /* 次要文字色 */
-            --text-card: #fff8f0; /* 卡片文字色 */
+            --text-main: #fff8f0;
+            --text-sub: #e6d9cc;
+            --text-card: #fff8f0;
             --border-color: rgba(255, 240, 225, 0.22);
             --btn-primary: rgba(201,168,137,0.65);
             --notice-bg: linear-gradient(90deg, rgba(201,168,137,0.45), rgba(180,145,120,0.35));
@@ -30,11 +27,10 @@
             --card-bg: rgba(255,255,255,0.08);
         }
         [data-theme="day"] {
-            /* 白天模式 - 浅暖背景+深暖文字 */
             --bg-main: #f8efe8;
-            --text-main: #4a3c30; /* 主文字色 */
-            --text-sub: #6d5b4b; /* 次要文字色 */
-            --text-card: #4a3c30; /* 卡片文字色 */
+            --text-main: #4a3c30;
+            --text-sub: #6d5b4b;
+            --text-card: #4a3c30;
             --border-color: rgba(160, 125, 95, 0.3);
             --btn-primary: rgba(201,168,137,0.8);
             --notice-bg: linear-gradient(90deg, rgba(221, 186, 156, 0.6), rgba(200, 160, 130, 0.5));
@@ -42,13 +38,12 @@
             --card-bg: rgba(255,255,255,0.65);
         }
         body {
-            background: var(--bg-main, #f8efe8); /* 增加fallback值 */
+            background: var(--bg-main, #f8efe8);
             margin: 0;
             padding: 0;
             min-height: 100vh;
             transition: background 0.6s ease, color 0.6s ease;
         }
-        /* 顶部滚动公告条幅【手机重点优化】 */
         .notice-bar {
             width: 100%;
             background: var(--notice-bg);
@@ -58,7 +53,7 @@
         }
         .notice-text {
             white-space: nowrap;
-            color: var(--notice-text, #4a3c30); /* 增加fallback值 */
+            color: var(--notice-text, #4a3c30);
             font-size: 14px;
             line-height: 1.6;
             letter-spacing: 0.5px;
@@ -80,7 +75,7 @@
             background: var(--btn-primary);
             border: none;
             border-radius: 22px;
-            color: #fff !important; /* 按钮文字固定白色，确保对比度 */
+            color: #fff !important;
             font-size: 17px;
             font-weight: 500;
             margin: 10px 0 20px;
@@ -100,7 +95,7 @@
             border-radius: 18px;
             border: 1px solid var(--border-color);
             background: transparent;
-            color: var(--text-main, #4a3c30) !important; /* 增加!important确保生效 */
+            color: var(--text-main, #4a3c30) !important;
             cursor: pointer;
             font-size: 14px;
             transition: 0.3s;
@@ -108,11 +103,10 @@
             min-width: 70px;
             text-align: center;
         }
-        .filter-btn.active { 
-            background: rgba(201,168,137,0.55); 
-            color: #fff !important; /* 激活状态固定白色 */
+        .filter-btn.active {
+            background: rgba(201,168,137,0.55);
+            color: #fff !important;
         }
-        /* 帖子卡片 温暖柔和 */
         .post-card {
             background: var(--card-bg);
             backdrop-filter: blur(10px);
@@ -120,7 +114,7 @@
             border-radius: 24px;
             padding: 20px;
             margin: 16px 0;
-            color: var(--text-card, #4a3c30) !important; /* 增加!important确保生效 */
+            color: var(--text-card, #4a3c30) !important;
             transition: 0.3s ease;
         }
         .post-card-header {
@@ -133,13 +127,12 @@
             font-size: 15px;
             line-height: 1.7;
             margin: 12px 0;
-            color: var(--text-card, #4a3c30) !important; /* 帖子内容文字颜色，增加!important */
+            color: var(--text-card, #4a3c30) !important;
         }
         .post-meta {
             font-size: 12px;
-            color: var(--text-sub, #6d5b4b) !important; /* 元数据文字颜色，增加!important */
+            color: var(--text-sub, #6d5b4b) !important;
         }
-        /* 【微信同款点赞按钮 - 右上角小巧样式】 */
         .like-btn {
             background: transparent;
             border: none;
@@ -160,7 +153,7 @@
             border-radius: 18px;
             background: rgba(255,255,255,0.08);
             border: 1px solid var(--border-color);
-            color: var(--text-card, #4a3c30) !important; /* 评论输入框文字颜色，增加!important */
+            color: var(--text-card, #4a3c30) !important;
             margin: 8px 0;
             font-size: 14px;
         }
@@ -170,9 +163,8 @@
             border-radius: 14px;
             margin: 8px 0;
             font-size: 14px;
-            color: var(--text-card, #4a3c30) !important; /* 评论内容文字颜色，增加!important */
+            color: var(--text-card, #4a3c30) !important;
         }
-        /* 验证界面【温馨话术优化】 */
         .verify-box {
             position: fixed;
             top: 0; left: 0;
@@ -188,13 +180,13 @@
         }
         .verify-title {
             font-size: 22px;
-            color: var(--text-main, #4a3c30) !important; /* 增加!important确保生效 */
+            color: var(--text-main, #4a3c30) !important;
             text-align: center;
             letter-spacing: 1px;
         }
         .verify-desc {
             font-size: 15px;
-            color: var(--text-sub, #6d5b4b) !important; /* 增加!important确保生效 */
+            color: var(--text-sub, #6d5b4b) !important;
             text-align: center;
             line-height: 1.6;
             max-width: 320px;
@@ -216,12 +208,12 @@
             position: absolute; left: 0; top: 0;
             cursor: grab;
             display: flex; align-items: center; justify-content: center;
-            color: #fff !important; /* 滑块文字固定白色 */
+            color: #fff !important;
             font-size: 14px;
         }
         .slider-text {
             position: absolute; width: 100%;
-            text-align: center; color: var(--text-sub, #6d5b4b) !important; /* 增加!important确保生效 */
+            text-align: center; color: var(--text-sub, #6d5b4b) !important;
             line-height: 44px; font-size: 14px;
         }
         .main-box { display: none; }
@@ -231,33 +223,26 @@
             font-size: 14px;
         }
         .links a {
-            color: var(--text-sub, #6d5b4b) !important; /* 链接文字颜色，增加!important */
+            color: var(--text-sub, #6d5b4b) !important;
             text-decoration: none;
         }
         .links a:active { color: var(--text-main, #4a3c30) !important; }
 
-        /* ========== 手机端专属响应式优化 ========== */
         @media (max-width: 768px) {
-            /* 公告条幅：手机加大字号、加高、滚动适配 */
             .notice-bar { padding: 16px 0; }
             .notice-text { font-size: 16px; animation: scroll 100s linear infinite; }
-            /* 验证界面手机适配 */
             .verify-title { font-size: 24px; }
             .verify-desc { font-size: 16px; }
-            /* 全局字号放大 */
             .publish-btn { font-size: 18px; padding: 18px; }
             .filter-btn { font-size: 15px; padding: 10px; }
             .post-content { font-size: 16px; }
-            /* 滑块手机全屏宽度，更好滑动 */
             .slider { max-width: 100%; }
-            /* 卡片内边距加大，手机更舒适 */
             .post-card { padding: 22px; }
             .comment-input, .comment-item { font-size: 15px; }
         }
     </style>
 </head>
 <body>
-    <!-- 顶部滚动置顶公告条幅（手机端自动放大适配） -->
     <div class="notice-bar">
         <div class="notice-text">
             【树洞主页简介】这里只属于彩虹圈层的情绪避风港。不用伪装、不用逞强、不用在意世俗眼光，感情烦恼、身份迷茫、家庭压力、圈内内耗、深夜emo、暗恋心事、被辜负的委屈，都可以匿名倾诉。我们只倾听、只共情、不指责、不传播，守住你的秘密，收留你的所有柔软与孤独。
@@ -270,7 +255,6 @@
         </div>
     </div>
 
-    <!-- 【优化后温馨验证区域】 -->
     <div class="verify-box" id="verifyBox">
         <div class="verify-title">💌 欢迎来到彩虹树洞</div>
         <div class="verify-desc">
@@ -283,7 +267,6 @@
         </div>
     </div>
 
-    <!-- 主界面（验证后显示） -->
     <div class="main-box container" id="mainBox">
         <h1>📜 CHOOSE C 心事墙</h1>
         <button class="publish-btn" onclick="location.href='index.html'">💌 我要倾诉</button>
@@ -301,13 +284,10 @@
 
 <script src="js/supabase-client.js"></script>
 <script>
-    // 日夜模式自动切换 - 优化变量更新逻辑
     function setDayNightTheme() {
         const hour = new Date().getHours();
         const isDay = hour >=6 && hour <18;
         document.body.setAttribute('data-theme', isDay ? 'day' : 'night');
-        
-        // 强制刷新变量，解决颜色不更新问题
         document.documentElement.style.setProperty('--bg-main', isDay ? '#f8efe8' : '#38322d');
         document.documentElement.style.setProperty('--text-main', isDay ? '#4a3c30' : '#fff8f0');
         document.documentElement.style.setProperty('--text-sub', isDay ? '#6d5b4b' : '#e6d9cc');
@@ -316,15 +296,12 @@
     setDayNightTheme();
     setInterval(setDayNightTheme, 60000);
 
-    // 验证状态：24小时有效
     const VERIFY_DAY = 24 * 60 * 60 * 1000;
     function checkVerify() {
         const last = localStorage.getItem('verifyTime');
-        if(last && Date.now() - last < VERIFY_DAY) return true;
-        return false;
+        return last && Date.now() - last < VERIFY_DAY;
     }
 
-    // 滑块验证（鼠标+触摸双兼容）
     const slider = document.querySelector('.slider');
     const block = document.querySelector('.slider-block');
     let isMove = false;
@@ -343,13 +320,11 @@
     });
     document.addEventListener('mouseup touchend', () => isMove = false);
 
-    // 已验证直接进入
     if(checkVerify()){
         document.getElementById('verifyBox').style.display = 'none';
         document.getElementById('mainBox').style.display = 'block';
     }
 
-    // 违禁词
     let forbiddenWords = [];
     let currentTag = 'all';
     async function loadWords() {
@@ -363,7 +338,6 @@
         return forbiddenWords.some(w => str.toLowerCase().includes(w.toLowerCase()));
     }
 
-    // 加载帖子
     async function loadPosts() {
         let query = supabaseClient.from('posts').select('*').eq('is_public', true).order('created_at', { ascending: false });
         if (currentTag !== 'all') query = query.eq('tag', currentTag);
