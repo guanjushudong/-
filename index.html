@@ -38,44 +38,39 @@
     
     <script src="js/supabase-client.js"></script>
     <script>
-        // ====================== 完整违禁词库（覆盖辱骂、色情、暴力、政治、违规） ======================
-        const forbiddenWords = [
-            // 脏话辱骂类
-            "傻逼", "废物", "去死", "滚", "脑残", "垃圾", "杂种", "狗东西", "尼玛", "你妈", "草", "艹",
-            "有病", "憨憨", "弱智", "缺德", "贱人", "婊子", "畜生", "王八", "垃圾人", "死全家",
-            "狗逼", "*********", "*********", "日你妈", "去死吧", "滚蛋", "去死吧你", "脑瘫", "沙比",
-            
-            // 低俗色情类
-            "色情", "黄片", "约炮", "嫖娼", "做爱", "自慰", "手淫", "裸聊", "性暗示", "开房",
-            "淫荡", "骚货", "下体", "性交", "乱搞", "一夜情", "出轨", "绿帽", "AV", "黄图",
-            
-            // 暴力自残自杀类
-            "杀人", "自杀", "自残", "跳楼", "割腕", "爆炸", "家暴", "打人", "报复社会", "恐怖袭击",
-            "跳楼自杀", "喝药", "上吊", "纵火", "虐杀", "伤害", "杀人放火",
-            
-            // 政治敏感/违规类
-            "台独", "港独", "反动", "支那", "卖国", "邪教", "法轮功", "分裂国家", "辱骂国家",
-            "反动言论", "叛国", "汉奸", "间谍", "暴乱",
-            
-            // 违法违规类
-            "赌博", "毒品", "吸毒", "诈骗", "洗钱", "高利贷", "走私", "贩毒", "卖淫", "嫖娼",
-            "刷单", "洗钱", "套现", "非法集资",
-            
-            // 网络恶意黑话
-            "网暴", "人肉", "挂人", "爆破", "网黑", "引战", "带节奏", "地域黑", "歧视", "阴阳怪气"
+        // 备用内置词库（txt读取失败时自动启用）
+        let forbiddenWords = [
+            "傻逼", "废物", "去死", "滚", "脑残", "垃圾", "杂种", "狗东西", "尼玛", "你妈", "草", "艹"
         ];
+
+        // ========== 读取本地 违禁词.txt 词库 ==========
+        async function loadForbiddenWords() {
+            try {
+                const res = await fetch('./违禁词.txt');
+                const text = await res.text();
+                // 按换行分割，过滤空行、空格
+                forbiddenWords = text.split(/\r?\n/)
+                    .map(w => w.trim())
+                    .filter(w => w.length > 0);
+                console.log("✅ 成功加载外部违禁词库，共" + forbiddenWords.length + "个词汇");
+            } catch (err) {
+                console.warn("⚠️ 读取违禁词.txt失败，使用内置备用词库", err);
+            }
+        }
+
+        // 页面加载立刻读取词库
+        loadForbiddenWords();
 
         // 违禁词检测函数
         function checkForbiddenWords(content) {
             const lowerContent = content.toLowerCase();
             for (let word of forbiddenWords) {
-                if (lowerContent.includes(word)) {
+                if (lowerContent.includes(word.toLowerCase())) {
                     return word;
                 }
             }
             return null;
         }
-        // ==========================================================================================
 
         function generateSecret() {
             return Math.random().toString(36).substring(2, 10);
