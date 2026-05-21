@@ -88,6 +88,7 @@
             position: relative;
             overflow: hidden;
             margin:20px auto;
+            touch-action: none; /* 关键修复 */
         }
         .slider-block {
             width: 64px; height: 44px;
@@ -97,6 +98,7 @@
             cursor: grab;
             display: flex; align-items: center; justify-content: center;
             color: #fff; font-size: 14px;
+            touch-action: none; /* 关键修复 */
         }
         .slider-text {
             position: absolute; width: 100%;
@@ -209,23 +211,79 @@
     }
     function checkBadWords(str){ return forbiddenWords.some(w=>str.toLowerCase().includes(w.toLowerCase())); }
 
+    // 滑块验证修复版
     const slider=document.querySelector('.slider');
     const block=document.querySelector('.slider-block');
     let isMove=false;
-    block.addEventListener('mousedown touchstart',()=>isMove=true);
-    document.addEventListener('mousemove touchmove',(e)=>{
+    let startX=0;
+
+    // pointer事件（最佳兼容性）
+    block.addEventListener('pointerdown', (e) => {
+        isMove=true;
+        startX = e.clientX - block.getBoundingClientRect().left;
+        block.setPointerCapture(e.pointerId);
+        e.preventDefault();
+    });
+
+    document.addEventListener('pointermove', (e) => {
         if(!isMove)return;
-        const touch=e.touches?e.touches[0]:e;
-        let x=touch.clientX-slider.getBoundingClientRect().left;
-        if(x>0&&x<slider.offsetWidth-64)block.style.left=x+'px';
-        if(x>=slider.offsetWidth-64){
+        e.preventDefault(); // 关键修复
+        const sliderRect = slider.getBoundingClientRect();
+        let x = e.clientX - sliderRect.left - startX;
+        
+        if(x>0 && x < sliderRect.width - block.offsetWidth) {
+            block.style.left = x + 'px';
+        }
+        if(x >= sliderRect.width - block.offsetWidth) {
             verifyPass=true;
-            block.style.left=slider.offsetWidth-64+'px';
+            block.style.left = sliderRect.width - block.offsetWidth + 'px';
             document.querySelector('.slider-text').textContent='✅ 验证成功，BGM已开启';
-            isBgmPlay=true;bgmAudio.play();
+            isBgmPlay=true;
+            bgmAudio.play();
+            isMove=false;
         }
     });
-    document.addEventListener('mouseup touchend',()=>isMove=false);
+
+    document.addEventListener('pointerup', (e) => {
+        if(isMove) {
+            block.releasePointerCapture(e.pointerId);
+            isMove=false;
+            if(!verifyPass) block.style.left = '0px';
+        }
+    });
+
+    // 触摸事件兼容
+    block.addEventListener('touchstart', (e) => {
+        isMove=true;
+        startX = e.touches[0].clientX - block.getBoundingClientRect().left;
+        e.preventDefault();
+    });
+
+    document.addEventListener('touchmove', (e) => {
+        if(!isMove)return;
+        e.preventDefault(); // 关键修复
+        const sliderRect = slider.getBoundingClientRect();
+        let x = e.touches[0].clientX - sliderRect.left - startX;
+        
+        if(x>0 && x < sliderRect.width - block.offsetWidth) {
+            block.style.left = x + 'px';
+        }
+        if(x >= sliderRect.width - block.offsetWidth) {
+            verifyPass=true;
+            block.style.left = sliderRect.width - block.offsetWidth + 'px';
+            document.querySelector('.slider-text').textContent='✅ 验证成功，BGM已开启';
+            isBgmPlay=true;
+            bgmAudio.play();
+            isMove=false;
+        }
+    });
+
+    document.addEventListener('touchend', () => {
+        if(isMove && !verifyPass) {
+            block.style.left = '0px';
+            isMove=false;
+        }
+    });
 
     document.querySelectorAll('.category-item').forEach(item=>{
         item.addEventListener('click',()=>{

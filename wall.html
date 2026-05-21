@@ -177,6 +177,7 @@
             z-index: 9999;
             padding: 20px;
             gap: 16px;
+            touch-action: none; /* 关键修复：禁用默认触摸行为 */
         }
         .verify-title {
             font-size: 22px;
@@ -200,6 +201,7 @@
             position: relative;
             overflow: hidden;
             margin-top: 8px;
+            touch-action: none; /* 关键修复：禁用默认触摸行为 */
         }
         .slider-block {
             width: 64px; height: 44px;
@@ -210,6 +212,7 @@
             display: flex; align-items: center; justify-content: center;
             color: #fff !important;
             font-size: 14px;
+            touch-action: none; /* 关键修复：禁用默认触摸行为 */
         }
         .slider-text {
             position: absolute; width: 100%;
@@ -302,23 +305,86 @@
         return last && Date.now() - last < VERIFY_DAY;
     }
 
+    // 滑块验证修复版（兼容PC和移动端）
     const slider = document.querySelector('.slider');
     const block = document.querySelector('.slider-block');
     let isMove = false;
-    block.addEventListener('mousedown touchstart', () => isMove = true);
-    document.addEventListener('mousemove touchmove', (e) => {
+    let startX = 0;
+    
+    // 统一使用pointer事件（最佳兼容性）
+    block.addEventListener('pointerdown', (e) => {
+        isMove = true;
+        startX = e.clientX - block.getBoundingClientRect().left;
+        block.setPointerCapture(e.pointerId); // 捕获指针，防止丢失焦点
+        e.preventDefault(); // 阻止默认行为
+    });
+    
+    document.addEventListener('pointermove', (e) => {
         if (!isMove) return;
-        const touch = e.touches ? e.touches[0] : e;
-        let x = touch.clientX - slider.getBoundingClientRect().left;
-        if (x > 0 && x < slider.offsetWidth - 64) block.style.left = x + 'px';
-        if (x >= slider.offsetWidth - 64) {
+        e.preventDefault(); // 关键修复：阻止页面滚动，确保滑块拖动
+        const sliderRect = slider.getBoundingClientRect();
+        let x = e.clientX - sliderRect.left - startX;
+        
+        // 限制滑块范围
+        if (x < 0) x = 0;
+        if (x > sliderRect.width - block.offsetWidth) {
+            x = sliderRect.width - block.offsetWidth;
+            // 验证成功
             localStorage.setItem('verifyTime', Date.now());
             document.getElementById('verifyBox').style.display = 'none';
             document.getElementById('mainBox').style.display = 'block';
             loadPosts();
+            isMove = false;
+        }
+        block.style.left = x + 'px';
+    });
+    
+    document.addEventListener('pointerup', (e) => {
+        if (isMove) {
+            block.releasePointerCapture(e.pointerId); // 释放指针
+            isMove = false;
+            // 未完成验证时重置滑块
+            const sliderRect = slider.getBoundingClientRect();
+            if (parseInt(block.style.left) < sliderRect.width - block.offsetWidth - 10) {
+                block.style.left = '0px';
+            }
         }
     });
-    document.addEventListener('mouseup touchend', () => isMove = false);
+
+    // 兼容旧浏览器的触摸事件
+    block.addEventListener('touchstart', (e) => {
+        isMove = true;
+        startX = e.touches[0].clientX - block.getBoundingClientRect().left;
+        e.preventDefault();
+    });
+    
+    document.addEventListener('touchmove', (e) => {
+        if (!isMove) return;
+        e.preventDefault(); // 关键修复：阻止页面滚动
+        const sliderRect = slider.getBoundingClientRect();
+        let x = e.touches[0].clientX - sliderRect.left - startX;
+        
+        if (x < 0) x = 0;
+        if (x > sliderRect.width - block.offsetWidth) {
+            x = sliderRect.width - block.offsetWidth;
+            localStorage.setItem('verifyTime', Date.now());
+            document.getElementById('verifyBox').style.display = 'none';
+            document.getElementById('mainBox').style.display = 'block';
+            loadPosts();
+            isMove = false;
+        }
+        block.style.left = x + 'px';
+    });
+    
+    document.addEventListener('touchend', () => {
+        if (isMove) {
+            isMove = false;
+            const sliderRect = slider.getBoundingClientRect();
+            if (parseInt(block.style.left) < sliderRect.width - block.offsetWidth - 10) {
+                block.style.left = '0px';
+            }
+        }
+    });
 
     if(checkVerify()){
         document.getElementById('verifyBox').style.display = 'none';
