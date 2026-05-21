@@ -7,13 +7,26 @@
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        :root {
+            --bg-main: #38322d;
+            --text-main: #ffffff;
+            --text-sub: rgba(255,240,225,0.75);
+            --border-color: rgba(255, 240, 225, 0.18);
+        }
+        [data-theme="day"] {
+            --bg-main: #f8efe8;
+            --text-main: #332c26;
+            --text-sub: rgba(80,65,50,0.75);
+            --border-color: rgba(200, 165, 135, 0.25);
+        }
+        body {background:var(--bg-main);color:var(--text-main);}
         .filter-tag{display:flex;gap:8px;margin:20px 0;flex-wrap:wrap;}
-        .filter-btn{padding:6px 12px;border-radius:15px;border:1px solid rgba(255,240,225,0.3);background:transparent;color:#fff;cursor:pointer;}
+        .filter-btn{padding:6px 12px;border-radius:15px;border:1px solid var(--border-color);background:transparent;color:var(--text-main);cursor:pointer;}
         .filter-btn.active{background:rgba(201,168,137,0.5);}
-        .like-btn{background:transparent;border:none;color:#fff;cursor:pointer;display:flex;align-items:center;gap:5px;}
+        .like-btn{background:transparent;border:none;color:var(--text-main);cursor:pointer;display:flex;align-items:center;gap:5px;}
         .comment-box{margin-top:10px;}
-        .comment-input{width:100%;padding:10px;border-radius:15px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,240,225,0.2);color:#fff;margin:5px 0;}
-        .comment-item{background:rgba(255,255,255,0.05);padding:8px 12px;border-radius:10px;margin:5px 0;font-size:14px;}
+        .comment-input{width:100%;padding:10px;border-radius:15px;background:rgba(255,255,255,0.05);border:1px solid var(--border-color);color:var(--text-main);margin:5px 0;}
+        .comment-item{background:rgba(255,255,255,0.05);padding:8px 12px;border-radius:10px;margin:5px 0;font-size:14px;color:var(--text-main);}
     </style>
 </head>
 <body>
@@ -25,6 +38,7 @@
         <button class="filter-btn" data-tag="烦恼">烦恼</button>
         <button class="filter-btn" data-tag="祝福">祝福</button>
         <button class="filter-btn" data-tag="日常">日常</button>
+        <button class="filter-btn" data-tag="情感">情感</button>
     </div>
     <div id="postList"></div>
     <p class="links"><a href="index.html">返回投稿</a> | <a href="lookup.html">查回复/删帖</a></p>
@@ -32,6 +46,14 @@
 
 <script src="js/supabase-client.js"></script>
 <script>
+    // 日夜模式同步
+    function setDayNightTheme() {
+        const hour = new Date().getHours();
+        document.body.setAttribute('data-theme', hour >=6 && hour <18 ? 'day' : 'night');
+    }
+    setDayNightTheme();
+    setInterval(setDayNightTheme, 60000);
+
     let forbiddenWords = [];
     let currentTag = 'all';
 
@@ -52,7 +74,10 @@
         if (currentTag !== 'all') query = query.eq('tag', currentTag);
         const { data } = await query;
         const list = document.getElementById('postList');
-        list.innerHTML = data.map(p => `
+        
+        list.innerHTML = data.map(p => {
+            const replies = Array.isArray(p.replies) ? p.replies : [];
+            return `
             <div class="post-card">
                 <div style="display:flex;justify-content:space-between;">
                     <span>【${p.tag}】</span>
@@ -64,10 +89,10 @@
                 <div class="comment-box">
                     <input class="comment-input" id="comment${p.id}" placeholder="写下评论...">
                     <button onclick="sendComment(${p.id})" style="padding:5px 10px;border-radius:10px;background:rgba(201,168,137,0.4);color:#fff;border:none;">发送</button>
-                    <div>${p.replies.map(r => `<div class="comment-item">${r.content}</div>`).join('')}</div>
+                    <div>${replies.map(r => `<div class="comment-item">${r.content || r}</div>`).join('')}</div>
                 </div>` : '<p style="color:#aaa;font-size:14px;">💬 评论已关闭</p>'}
-            </div>
-        `).join('');
+            </div>`;
+        }).join('');
     }
 
     async function likePost(id, count) {
@@ -78,9 +103,13 @@
     async function sendComment(id) {
         const content = document.getElementById(`comment${id}`).value.trim();
         if (!content || checkBad(content)) return alert('请文明倾诉后重新提交~');
+        
         const { data } = await supabaseClient.from('posts').select('replies').eq('id', id).single();
-        data.replies.push({ content });
-        await supabaseClient.from('posts').update({ replies: data.replies }).eq('id', id);
+        const newReplies = Array.isArray(data.replies) ? [...data.replies] : [];
+        newReplies.push({ content });
+        
+        await supabaseClient.from('posts').update({ replies: newReplies }).eq('id', id);
+        document.getElementById(`comment${id}`).value = '';
         loadPosts();
     }
 

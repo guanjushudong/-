@@ -6,12 +6,29 @@
     <title>查回复/删帖</title>
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>.del-btn{background:#ff4444;border:none;color:#fff;padding:5px 10px;border-radius:10px;cursor:pointer;margin-top:10px;}</style>
+    <style>
+        :root {
+            --bg-main: #38322d;
+            --text-main: #ffffff;
+            --text-sub: rgba(255,240,225,0.75);
+            --border-color: rgba(255, 240, 225, 0.18);
+        }
+        [data-theme="day"] {
+            --bg-main: #f8efe8;
+            --text-main: #332c26;
+            --text-sub: rgba(80,65,50,0.75);
+            --border-color: rgba(200, 165, 135, 0.25);
+        }
+        body {background:var(--bg-main);color:var(--text-main);}
+        .del-btn{background:#ff4444;border:none;color:#fff;padding:5px 10px;border-radius:10px;cursor:pointer;margin-top:10px;}
+        .comment-item{background:rgba(255,255,255,0.05);padding:8px 12px;border-radius:10px;margin:5px 0;font-size:14px;color:var(--text-main);}
+        input{background:rgba(255,255,255,0.05);border:1px solid var(--border-color);color:var(--text-main);}
+    </style>
 </head>
 <body>
 <div class="container">
     <h1>🔍 查回复 / 删帖</h1>
-    <input type="text" id="secretInput" placeholder="输入你的暗号" style="width:100%;padding:12px;border-radius:20px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,240,225,0.2);color:#fff;margin:20px 0;">
+    <input type="text" id="secretInput" placeholder="输入你的暗号" style="width:100%;padding:12px;border-radius:20px;margin:20px 0;">
     <button onclick="searchPost()" style="width:100%;">查询</button>
     <div id="result" style="margin-top:20px;"></div>
     <p class="links"><a href="index.html">返回投稿</a> | <a href="wall.html">心事墙</a></p>
@@ -19,18 +36,25 @@
 
 <script src="js/supabase-client.js"></script>
 <script>
+    function setDayNightTheme() {
+        const hour = new Date().getHours();
+        document.body.setAttribute('data-theme', hour >=6 && hour <18 ? 'day' : 'night');
+    }
+    setDayNightTheme();
+
     async function searchPost() {
         const secret = document.getElementById('secretInput').value.trim();
         if (!secret) return alert('请输入暗号');
         const { data } = await supabaseClient.from('posts').select('*').eq('secret_code', secret).single();
         if (!data) return alert('未找到该帖子');
         
+        const replies = Array.isArray(data.replies) ? data.replies : [];
         document.getElementById('result').innerHTML = `
             <div class="post-card">
                 <div>【${data.tag}】</div>
                 <div class="post-content">${data.content}</div>
                 <div class="post-meta">点赞：${data.like_count}</div>
-                <div style="margin:10px 0;"><b>评论：</b>${data.replies.map(r=>`<div class="comment-item">${r.content}</div>`).join('')||'暂无评论'}</div>
+                <div style="margin:10px 0;"><b>评论：</b>${replies.map(r=>`<div class="comment-item">${r.content || r}</div>`).join('')||'暂无评论'}</div>
                 <button class="del-btn" onclick="deletePost(${data.id},'${secret}')">🗑️ 删帖</button>
             </div>
         `;
