@@ -32,7 +32,7 @@
         </div>
         
         <p class="links">
-            <a href="wall.html">去看看 CHOOSE C 心事墙</a> | <a href="lookup.html">我有暗号，查回复</a>
+            <a href="wall.html">去看看 CHOOSE C 心事墙</a> | <a href="lookup.html">查回复</a>
         </p>
     </div>
     
@@ -43,29 +43,27 @@
             "傻逼", "废物", "去死", "滚", "脑残", "垃圾", "杂种", "狗东西", "尼玛", "你妈", "草", "艹"
         ];
 
-        // ========== 读取本地 违禁词.txt 词库 ==========
+        // 读取本地 违禁词.txt 词库
         async function loadForbiddenWords() {
             try {
                 const res = await fetch('./违禁词.txt');
                 const text = await res.text();
-                // 按换行分割，过滤空行、空格
                 forbiddenWords = text.split(/\r?\n/)
                     .map(w => w.trim())
                     .filter(w => w.length > 0);
-                console.log("✅ 成功加载外部违禁词库，共" + forbiddenWords.length + "个词汇");
+                console.log("✅ 成功加载违禁词库");
             } catch (err) {
-                console.warn("⚠️ 读取违禁词.txt失败，使用内置备用词库", err);
+                console.warn("⚠️ 违禁词库加载失败，使用内置词库");
             }
         }
-
-        // 页面加载立刻读取词库
         loadForbiddenWords();
 
-        // 违禁词检测函数
+        // 违禁词检测
         function checkForbiddenWords(content) {
             const lowerContent = content.toLowerCase();
             for (let word of forbiddenWords) {
-                if (lowerContent.includes(word.toLowerCase())) {
+                const w = word.toLowerCase();
+                if (w && lowerContent.includes(w)) {
                     return word;
                 }
             }
@@ -79,12 +77,16 @@
         document.getElementById('submitBtn').addEventListener('click', async () => {
             const content = document.getElementById('contentInput').value.trim();
             
-            if (!content) return alert('请写下心事，投入 CHOOSE C 树洞');
+            // 1. 空内容提示
+            if (!content) {
+                alert('❌ 投稿失败！请写下你的心事再提交~');
+                return;
+            }
 
-            // 执行违禁词拦截
+            // 2. 违禁词检测【明确提示原因】
             const badWord = checkForbiddenWords(content);
             if (badWord) {
-                alert(`内容包含不当用语「${badWord}」，请文明倾诉，温柔表达心事~`);
+                alert(`❌ 投稿失败！内容包含违禁词「${badWord}」，请文明倾诉后重新提交~`);
                 return;
             }
 
@@ -96,12 +98,14 @@
                 .from('posts')
                 .insert([{ content, is_public: isPublic, allow_article: allowArticle, secret_code: secret }]);
 
+            // 3. 服务器/网络失败提示
             if (error) {
-                alert('投稿失败，请重试');
+                alert('❌ 投稿失败！服务器异常，请稍后重试~');
                 console.error(error);
                 return;
             }
 
+            // 成功
             document.getElementById('resultBox').style.display = 'block';
             document.getElementById('secretDisplay').textContent = secret;
             document.getElementById('contentInput').value = '';
