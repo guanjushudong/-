@@ -2,70 +2,249 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 强制手机端完美缩放适配 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CHOOSE C 心事墙</title>
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        /* 全局温暖圆润字体 + 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "PingFang SC", "Microsoft YaHei", "微软雅黑", sans-serif;
+            -webkit-tap-highlight-color: transparent; /* 去除手机点击高亮 */
+        }
         :root {
+            /* 夜晚模式 - 深背景+浅暖文字 */
             --bg-main: #38322d;
-            --text-main: #ffffff;
-            --text-sub: rgba(255,240,225,0.75);
-            --border-color: rgba(255, 240, 225, 0.18);
-            --btn-primary: rgba(201,168,137,0.6);
-            /* 公告条幅样式 */
-            --notice-bg: linear-gradient(90deg, rgba(201,168,137,0.4), rgba(180,145,120,0.3));
-            --notice-text: #fff;
+            --text-main: #fff8f0;
+            --text-sub: #e6d9cc;
+            --text-card: #fff8f0;
+            --border-color: rgba(255, 240, 225, 0.22);
+            --btn-primary: rgba(201,168,137,0.65);
+            --notice-bg: linear-gradient(90deg, rgba(201,168,137,0.45), rgba(180,145,120,0.35));
+            --notice-text: #fff8f0;
+            --card-bg: rgba(255,255,255,0.08);
         }
         [data-theme="day"] {
+            /* 白天模式 - 浅暖背景+深暖文字 */
             --bg-main: #f8efe8;
-            --text-main: #332c26;
-            --text-sub: rgba(80,65,50,0.75);
-            --border-color: rgba(200, 165, 135, 0.25);
+            --text-main: #4a3c30;
+            --text-sub: #6d5b4b;
+            --text-card: #4a3c30;
+            --border-color: rgba(160, 125, 95, 0.3);
             --btn-primary: rgba(201,168,137,0.8);
-            --notice-bg: linear-gradient(90deg, rgba(221,186,156,0.5), rgba(200,160,130,0.4));
-            --notice-text: #332c26;
+            --notice-bg: linear-gradient(90deg, rgba(221, 186, 156, 0.6), rgba(200, 160, 130, 0.5));
+            --notice-text: #4a3c30;
+            --card-bg: rgba(255,255,255,0.65);
         }
-        body {background:var(--bg-main);color:var(--text-main);margin:0;padding:0;min-height:100vh;}
-        /* 顶部滚动公告条幅 */
+        body {
+            background: var(--bg-main);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            transition: background 0.6s ease, color 0.6s ease;
+        }
+        /* 顶部滚动公告条幅【手机重点优化】 */
         .notice-bar {
             width: 100%;
             background: var(--notice-bg);
-            padding: 10px 0;
+            padding: 14px 0;
             overflow: hidden;
             border-bottom: 1px solid var(--border-color);
         }
         .notice-text {
             white-space: nowrap;
             color: var(--notice-text);
-            font-size: 13px;
-            animation: scroll 120s linear infinite;
+            font-size: 14px;
+            line-height: 1.6;
+            letter-spacing: 0.5px;
+            animation: scroll 140s linear infinite;
         }
         @keyframes scroll {
             0% { transform: translateX(100%); }
             100% { transform: translateX(-100%); }
         }
-        .container {max-width:800px;margin:20px auto;padding:0 20px;}
-        .publish-btn {width:100%;padding:14px;background:var(--btn-primary);border:none;border-radius:20px;color:#fff;font-size:16px;font-weight:bold;margin:10px 0 20px;cursor:pointer;transition:0.3s;}
-        .publish-btn:hover {transform:scale(1.02);background:rgba(201,168,137,0.8);}
-        .filter-tag{display:flex;gap:8px;margin:20px 0;flex-wrap:wrap;}
-        .filter-btn{padding:6px 12px;border-radius:15px;border:1px solid var(--border-color);background:transparent;color:var(--text-main);cursor:pointer;}
-        .filter-btn.active{background:rgba(201,168,137,0.5);}
-        .like-btn{background:transparent;border:none;color:var(--text-main);cursor:pointer;display:flex;align-items:center;gap:5px;}
-        .comment-box{margin-top:10px;}
-        .comment-input{width:100%;padding:10px;border-radius:15px;background:rgba(255,255,255,0.05);border:1px solid var(--border-color);color:var(--text-main);margin:5px 0;}
-        .comment-item{background:rgba(255,255,255,0.05);padding:8px 12px;border-radius:10px;margin:5px 0;font-size:14px;color:var(--text-main);}
-        /* 验证界面 */
-        .verify-box{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg-main);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;}
-        .verify-text{font-size:18px;color:var(--text-sub);margin-bottom:20px;}
-        .slider{width:300px;height:40px;background:rgba(255,255,255,0.1);border-radius:20px;position:relative;overflow:hidden;}
-        .slider-block{width:60px;height:40px;background:rgba(201,168,137,0.6);border-radius:20px;position:absolute;left:0;top:0;cursor:grab;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;}
-        .slider-text{position:absolute;width:100%;text-align:center;color:var(--text-sub);line-height:40px;}
-        .main-box{display:none;}
+        .container {
+            max-width: 800px;
+            width: 100%;
+            margin: 20px auto;
+            padding: 0 16px;
+        }
+        .publish-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--btn-primary);
+            border: none;
+            border-radius: 22px;
+            color: #fff;
+            font-size: 17px;
+            font-weight: 500;
+            margin: 10px 0 20px;
+            cursor: pointer;
+            transition: 0.3s ease;
+            letter-spacing: 1px;
+        }
+        .publish-btn:active { transform: scale(0.98); }
+        .filter-tag {
+            display: flex;
+            gap: 8px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .filter-btn {
+            padding: 8px 14px;
+            border-radius: 18px;
+            border: 1px solid var(--border-color);
+            background: transparent;
+            color: var(--text-main);
+            cursor: pointer;
+            font-size: 14px;
+            transition: 0.3s;
+            flex: 1;
+            min-width: 70px;
+            text-align: center;
+        }
+        .filter-btn.active { background: rgba(201,168,137,0.55); color: #fff; }
+        /* 帖子卡片 温暖柔和 */
+        .post-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 20px;
+            margin: 16px 0;
+            color: var(--text-card);
+            transition: 0.3s ease;
+        }
+        .post-card:active { transform: translateY(-1px); }
+        .post-content {
+            font-size: 15px;
+            line-height: 1.7;
+            margin: 12px 0;
+        }
+        .post-meta {
+            font-size: 12px;
+            color: var(--text-sub);
+        }
+        .like-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            transition: 0.2s;
+        }
+        .comment-box { margin-top: 14px; }
+        .comment-input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 18px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid var(--border-color);
+            color: var(--text-card);
+            margin: 8px 0;
+            font-size: 14px;
+        }
+        .comment-item {
+            background: rgba(255,255,255,0.08);
+            padding: 10px 14px;
+            border-radius: 14px;
+            margin: 8px 0;
+            font-size: 14px;
+            color: var(--text-card);
+        }
+        /* 验证界面【温馨话术优化】 */
+        .verify-box {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: var(--bg-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 20px;
+            gap: 16px;
+        }
+        .verify-title {
+            font-size: 22px;
+            color: var(--text-main);
+            text-align: center;
+            letter-spacing: 1px;
+        }
+        .verify-desc {
+            font-size: 15px;
+            color: var(--text-sub);
+            text-align: center;
+            line-height: 1.6;
+            max-width: 320px;
+        }
+        .slider {
+            width: 100%;
+            max-width: 320px;
+            height: 44px;
+            background: rgba(255,255,255,0.12);
+            border-radius: 22px;
+            position: relative;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        .slider-block {
+            width: 64px; height: 44px;
+            background: rgba(201,168,137,0.7);
+            border-radius: 22px;
+            position: absolute; left: 0; top: 0;
+            cursor: grab;
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: 14px;
+        }
+        .slider-text {
+            position: absolute; width: 100%;
+            text-align: center; color: var(--text-sub);
+            line-height: 44px; font-size: 14px;
+        }
+        .main-box { display: none; }
+        .links {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 14px;
+        }
+        .links a {
+            color: var(--text-sub);
+            text-decoration: none;
+        }
+        .links a:active { color: var(--text-main); }
+
+        /* ========== 手机端专属响应式优化 ========== */
+        @media (max-width: 768px) {
+            /* 公告条幅：手机加大字号、加高、滚动适配 */
+            .notice-bar { padding: 16px 0; }
+            .notice-text { font-size: 16px; animation: scroll 100s linear infinite; }
+            /* 验证界面手机适配 */
+            .verify-title { font-size: 24px; }
+            .verify-desc { font-size: 16px; }
+            /* 全局字号放大 */
+            .publish-btn { font-size: 18px; padding: 18px; }
+            .filter-btn { font-size: 15px; padding: 10px; }
+            .post-content { font-size: 16px; }
+            /* 滑块手机全屏宽度，更好滑动 */
+            .slider { max-width: 100%; }
+            /* 卡片内边距加大，手机更舒适 */
+            .post-card { padding: 22px; }
+            .comment-input, .comment-item { font-size: 15px; }
+        }
     </style>
 </head>
 <body>
-    <!-- 顶部滚动置顶公告条幅 -->
+    <!-- 顶部滚动置顶公告条幅（手机端自动放大适配） -->
     <div class="notice-bar">
         <div class="notice-text">
             【树洞主页简介】这里只属于彩虹圈层的情绪避风港。不用伪装、不用逞强、不用在意世俗眼光，感情烦恼、身份迷茫、家庭压力、圈内内耗、深夜emo、暗恋心事、被辜负的委屈，都可以匿名倾诉。我们只倾听、只共情、不指责、不传播，守住你的秘密，收留你的所有柔软与孤独。
@@ -78,11 +257,15 @@
         </div>
     </div>
 
-    <!-- 强制验证区域 -->
+    <!-- 【优化后温馨验证区域】 -->
     <div class="verify-box" id="verifyBox">
-        <div class="verify-text">请完成人机验证，进入 CHOOSE C 树洞</div>
+        <div class="verify-title">💌 欢迎来到彩虹树洞</div>
+        <div class="verify-desc">
+            轻轻滑动滑块，开启专属你的情绪避风港<br>
+            我们倾听你的心事，守护你的柔软与孤独
+        </div>
         <div class="slider">
-            <div class="slider-text">拖动滑块完成验证</div>
+            <div class="slider-text">温柔滑动，进入树洞～</div>
             <div class="slider-block">→</div>
         </div>
     </div>
@@ -105,7 +288,7 @@
 
 <script src="js/supabase-client.js"></script>
 <script>
-    // 日夜模式
+    // 日夜模式自动切换
     function setDayNightTheme() {
         const hour = new Date().getHours();
         document.body.setAttribute('data-theme', hour >=6 && hour <18 ? 'day' : 'night');
@@ -121,23 +304,24 @@
         return false;
     }
 
-    // 滑块验证
+    // 滑块验证（鼠标+触摸双兼容）
     const slider = document.querySelector('.slider');
     const block = document.querySelector('.slider-block');
     let isMove = false;
-    block.addEventListener('mousedown', () => isMove = true);
-    document.addEventListener('mousemove', (e) => {
+    block.addEventListener('mousedown touchstart', () => isMove = true);
+    document.addEventListener('mousemove touchmove', (e) => {
         if (!isMove) return;
-        let x = e.clientX - slider.getBoundingClientRect().left;
-        if (x > 0 && x < slider.offsetWidth - 60) block.style.left = x + 'px';
-        if (x >= slider.offsetWidth - 60) {
+        const touch = e.touches ? e.touches[0] : e;
+        let x = touch.clientX - slider.getBoundingClientRect().left;
+        if (x > 0 && x < slider.offsetWidth - 64) block.style.left = x + 'px';
+        if (x >= slider.offsetWidth - 64) {
             localStorage.setItem('verifyTime', Date.now());
             document.getElementById('verifyBox').style.display = 'none';
             document.getElementById('mainBox').style.display = 'block';
             loadPosts();
         }
     });
-    document.addEventListener('mouseup', () => isMove = false);
+    document.addEventListener('mouseup touchend', () => isMove = false);
 
     // 已验证直接进入
     if(checkVerify()){
@@ -178,9 +362,9 @@
                 ${p.is_comment_open ? `
                 <div class="comment-box">
                     <input class="comment-input" id="comment${p.id}" placeholder="写下评论...">
-                    <button onclick="sendComment(${p.id})" style="padding:5px 10px;border-radius:10px;background:rgba(201,168,137,0.4);color:#fff;border:none;">发送</button>
+                    <button onclick="sendComment(${p.id})" style="padding:6px 12px;border-radius:14px;background:rgba(201,168,137,0.5);color:#fff;border:none;">发送</button>
                     <div>${replies.map(r => `<div class="comment-item">${r.content || r}</div>`).join('')}</div>
-                </div>` : '<p style="color:#aaa;font-size:14px;">💬 评论已关闭</p>'}
+                </div>` : '<p style="color:var(--text-sub);font-size:14px;margin-top:10px;">💬 评论已关闭</p>'}
             </div>`;
         }).join('');
     }
