@@ -13,6 +13,9 @@
             --text-sub: rgba(255,240,225,0.75);
             --border-color: rgba(255, 240, 225, 0.18);
             --btn-primary: rgba(201,168,137,0.6);
+            /* 公告条幅样式 */
+            --notice-bg: linear-gradient(90deg, rgba(201,168,137,0.4), rgba(180,145,120,0.3));
+            --notice-text: #fff;
         }
         [data-theme="day"] {
             --bg-main: #f8efe8;
@@ -20,17 +23,29 @@
             --text-sub: rgba(80,65,50,0.75);
             --border-color: rgba(200, 165, 135, 0.25);
             --btn-primary: rgba(201,168,137,0.8);
+            --notice-bg: linear-gradient(90deg, rgba(221,186,156,0.5), rgba(200,160,130,0.4));
+            --notice-text: #332c26;
         }
-        body {background:var(--bg-main);color:var(--text-main);margin:0;padding:20px;min-height:100vh;}
-        .container {max-width:800px;margin:0 auto;}
-        /* 验证界面 */
-        .verify-box{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg-main);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;}
-        .verify-text{font-size:18px;color:var(--text-sub);margin-bottom:20px;}
-        .slider{width:300px;height:40px;background:rgba(255,255,255,0.1);border-radius:20px;position:relative;overflow:hidden;}
-        .slider-block{width:60px;height:40px;background:rgba(201,168,137,0.6);border-radius:20px;position:absolute;left:0;top:0;cursor:grab;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;}
-        .slider-text{position:absolute;width:100%;text-align:center;color:var(--text-sub);line-height:40px;}
-        /* 主界面 */
-        .main-box{display:none;}
+        body {background:var(--bg-main);color:var(--text-main);margin:0;padding:0;min-height:100vh;}
+        /* 顶部滚动公告条幅 */
+        .notice-bar {
+            width: 100%;
+            background: var(--notice-bg);
+            padding: 10px 0;
+            overflow: hidden;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .notice-text {
+            white-space: nowrap;
+            color: var(--notice-text);
+            font-size: 13px;
+            animation: scroll 120s linear infinite;
+        }
+        @keyframes scroll {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        .container {max-width:800px;margin:20px auto;padding:0 20px;}
         .publish-btn {width:100%;padding:14px;background:var(--btn-primary);border:none;border-radius:20px;color:#fff;font-size:16px;font-weight:bold;margin:10px 0 20px;cursor:pointer;transition:0.3s;}
         .publish-btn:hover {transform:scale(1.02);background:rgba(201,168,137,0.8);}
         .filter-tag{display:flex;gap:8px;margin:20px 0;flex-wrap:wrap;}
@@ -40,9 +55,29 @@
         .comment-box{margin-top:10px;}
         .comment-input{width:100%;padding:10px;border-radius:15px;background:rgba(255,255,255,0.05);border:1px solid var(--border-color);color:var(--text-main);margin:5px 0;}
         .comment-item{background:rgba(255,255,255,0.05);padding:8px 12px;border-radius:10px;margin:5px 0;font-size:14px;color:var(--text-main);}
+        /* 验证界面 */
+        .verify-box{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg-main);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;}
+        .verify-text{font-size:18px;color:var(--text-sub);margin-bottom:20px;}
+        .slider{width:300px;height:40px;background:rgba(255,255,255,0.1);border-radius:20px;position:relative;overflow:hidden;}
+        .slider-block{width:60px;height:40px;background:rgba(201,168,137,0.6);border-radius:20px;position:absolute;left:0;top:0;cursor:grab;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;}
+        .slider-text{position:absolute;width:100%;text-align:center;color:var(--text-sub);line-height:40px;}
+        .main-box{display:none;}
     </style>
 </head>
 <body>
+    <!-- 顶部滚动置顶公告条幅 -->
+    <div class="notice-bar">
+        <div class="notice-text">
+            【树洞主页简介】这里只属于彩虹圈层的情绪避风港。不用伪装、不用逞强、不用在意世俗眼光，感情烦恼、身份迷茫、家庭压力、圈内内耗、深夜emo、暗恋心事、被辜负的委屈，都可以匿名倾诉。我们只倾听、只共情、不指责、不传播，守住你的秘密，收留你的所有柔软与孤独。
+            &nbsp;&nbsp;&nbsp;&nbsp;
+            【社群置顶公告】🌈彩虹树洞·正式开放投稿｜本树洞为同城彩虹群体专属匿名倾诉通道 ✅全程匿名，绝不泄露个人信息 ✅不扒隐私、不编瓜、不对外散播 ✅不道德说教、不站队带节奏，只温柔倾听 ✅所有投稿仅作为情绪安放，不公开挂人、不人身攻击｜可倾诉：情感失恋、暧昧内耗、crush心事、身份焦虑、出柜压力、家庭催婚、交友遇人不淑、深夜孤独｜禁止：人身攻击、恶意挂人、造谣、广告引流、引战挑事，请温柔倾诉，守护干净树洞氛围。
+            &nbsp;&nbsp;&nbsp;&nbsp;
+            【树洞保密公约】1.所有倾诉严格匿名，绝不追查身份、不扒圈子、不泄露隐私。2.绝不把投稿当八卦闲聊，不转发、不外传、不对号入座。3.倾听不评判，共情不说教，不否定你的情绪与选择。4.不挑拨圈内矛盾，不放大负面冲突。5.尊重每一份脆弱，做彩虹最安心的情绪自留地。
+            &nbsp;&nbsp;&nbsp;&nbsp;
+            【树洞投稿规则】1.全程匿名，自愿倾诉，可只说心事不用交代背景。2.语言文明，不辱骂、不挂人、不抹黑他人。3.只倾诉情绪心事，不发低俗、广告、引流内容。4.禁止编造虚假瓜、刻意引战、制造圈层对立。5.投稿即默认同意树洞收录倾听，不泄露个人线索。
+        </div>
+    </div>
+
     <!-- 强制验证区域 -->
     <div class="verify-box" id="verifyBox">
         <div class="verify-text">请完成人机验证，进入 CHOOSE C 树洞</div>
