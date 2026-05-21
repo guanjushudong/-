@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>心事墙</title>
+    <title>CHOOSE C 心事墙</title>
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -12,14 +12,27 @@
             --text-main: #ffffff;
             --text-sub: rgba(255,240,225,0.75);
             --border-color: rgba(255, 240, 225, 0.18);
+            --btn-primary: rgba(201,168,137,0.6);
         }
         [data-theme="day"] {
             --bg-main: #f8efe8;
             --text-main: #332c26;
             --text-sub: rgba(80,65,50,0.75);
             --border-color: rgba(200, 165, 135, 0.25);
+            --btn-primary: rgba(201,168,137,0.8);
         }
-        body {background:var(--bg-main);color:var(--text-main);}
+        body {background:var(--bg-main);color:var(--text-main);margin:0;padding:20px;min-height:100vh;}
+        .container {max-width:800px;margin:0 auto;}
+        /* 验证界面 */
+        .verify-box{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg-main);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;}
+        .verify-text{font-size:18px;color:var(--text-sub);margin-bottom:20px;}
+        .slider{width:300px;height:40px;background:rgba(255,255,255,0.1);border-radius:20px;position:relative;overflow:hidden;}
+        .slider-block{width:60px;height:40px;background:rgba(201,168,137,0.6);border-radius:20px;position:absolute;left:0;top:0;cursor:grab;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;}
+        .slider-text{position:absolute;width:100%;text-align:center;color:var(--text-sub);line-height:40px;}
+        /* 主界面 */
+        .main-box{display:none;}
+        .publish-btn {width:100%;padding:14px;background:var(--btn-primary);border:none;border-radius:20px;color:#fff;font-size:16px;font-weight:bold;margin:10px 0 20px;cursor:pointer;transition:0.3s;}
+        .publish-btn:hover {transform:scale(1.02);background:rgba(201,168,137,0.8);}
         .filter-tag{display:flex;gap:8px;margin:20px 0;flex-wrap:wrap;}
         .filter-btn{padding:6px 12px;border-radius:15px;border:1px solid var(--border-color);background:transparent;color:var(--text-main);cursor:pointer;}
         .filter-btn.active{background:rgba(201,168,137,0.5);}
@@ -30,23 +43,34 @@
     </style>
 </head>
 <body>
-<div class="container">
-    <h1>📜 心事墙</h1>
-    <div class="filter-tag">
-        <button class="filter-btn active" data-tag="all">全部</button>
-        <button class="filter-btn" data-tag="心情">心情</button>
-        <button class="filter-btn" data-tag="烦恼">烦恼</button>
-        <button class="filter-btn" data-tag="祝福">祝福</button>
-        <button class="filter-btn" data-tag="日常">日常</button>
-        <button class="filter-btn" data-tag="情感">情感</button>
+    <!-- 强制验证区域 -->
+    <div class="verify-box" id="verifyBox">
+        <div class="verify-text">请完成人机验证，进入 CHOOSE C 树洞</div>
+        <div class="slider">
+            <div class="slider-text">拖动滑块完成验证</div>
+            <div class="slider-block">→</div>
+        </div>
     </div>
-    <div id="postList"></div>
-    <p class="links"><a href="index.html">返回投稿</a> | <a href="lookup.html">查回复/删帖</a></p>
-</div>
+
+    <!-- 主界面（验证后显示） -->
+    <div class="main-box container" id="mainBox">
+        <h1>📜 CHOOSE C 心事墙</h1>
+        <button class="publish-btn" onclick="location.href='index.html'">💌 我要倾诉</button>
+        <div class="filter-tag">
+            <button class="filter-btn active" data-tag="all">全部</button>
+            <button class="filter-btn" data-tag="心情">心情</button>
+            <button class="filter-btn" data-tag="烦恼">烦恼</button>
+            <button class="filter-btn" data-tag="祝福">祝福</button>
+            <button class="filter-btn" data-tag="日常">日常</button>
+            <button class="filter-btn" data-tag="情感">情感</button>
+        </div>
+        <div id="postList"></div>
+        <p class="links"><a href="lookup.html">🔍 查回复/删帖</a></p>
+    </div>
 
 <script src="js/supabase-client.js"></script>
 <script>
-    // 日夜模式同步
+    // 日夜模式
     function setDayNightTheme() {
         const hour = new Date().getHours();
         document.body.setAttribute('data-theme', hour >=6 && hour <18 ? 'day' : 'night');
@@ -54,9 +78,41 @@
     setDayNightTheme();
     setInterval(setDayNightTheme, 60000);
 
+    // 验证状态：24小时有效
+    const VERIFY_DAY = 24 * 60 * 60 * 1000;
+    function checkVerify() {
+        const last = localStorage.getItem('verifyTime');
+        if(last && Date.now() - last < VERIFY_DAY) return true;
+        return false;
+    }
+
+    // 滑块验证
+    const slider = document.querySelector('.slider');
+    const block = document.querySelector('.slider-block');
+    let isMove = false;
+    block.addEventListener('mousedown', () => isMove = true);
+    document.addEventListener('mousemove', (e) => {
+        if (!isMove) return;
+        let x = e.clientX - slider.getBoundingClientRect().left;
+        if (x > 0 && x < slider.offsetWidth - 60) block.style.left = x + 'px';
+        if (x >= slider.offsetWidth - 60) {
+            localStorage.setItem('verifyTime', Date.now());
+            document.getElementById('verifyBox').style.display = 'none';
+            document.getElementById('mainBox').style.display = 'block';
+            loadPosts();
+        }
+    });
+    document.addEventListener('mouseup', () => isMove = false);
+
+    // 已验证直接进入
+    if(checkVerify()){
+        document.getElementById('verifyBox').style.display = 'none';
+        document.getElementById('mainBox').style.display = 'block';
+    }
+
+    // 违禁词
     let forbiddenWords = [];
     let currentTag = 'all';
-
     async function loadWords() {
         try {
             const t = await fetch('./违禁词.txt');
@@ -64,17 +120,16 @@
             forbiddenWords = a.split(/\r?\n/).map(i => i.trim()).filter(i => i);
         } catch (e) {}
     }
-
     function checkBad(str) {
         return forbiddenWords.some(w => str.toLowerCase().includes(w.toLowerCase()));
     }
 
+    // 加载帖子
     async function loadPosts() {
         let query = supabaseClient.from('posts').select('*').eq('is_public', true).order('created_at', { ascending: false });
         if (currentTag !== 'all') query = query.eq('tag', currentTag);
         const { data } = await query;
         const list = document.getElementById('postList');
-        
         list.innerHTML = data.map(p => {
             const replies = Array.isArray(p.replies) ? p.replies : [];
             return `
@@ -99,20 +154,16 @@
         await supabaseClient.from('posts').update({ like_count: count + 1 }).eq('id', id);
         loadPosts();
     }
-
     async function sendComment(id) {
         const content = document.getElementById(`comment${id}`).value.trim();
         if (!content || checkBad(content)) return alert('请文明倾诉后重新提交~');
-        
         const { data } = await supabaseClient.from('posts').select('replies').eq('id', id).single();
         const newReplies = Array.isArray(data.replies) ? [...data.replies] : [];
         newReplies.push({ content });
-        
         await supabaseClient.from('posts').update({ replies: newReplies }).eq('id', id);
         document.getElementById(`comment${id}`).value = '';
         loadPosts();
     }
-
     document.querySelectorAll('.filter-btn').forEach(b => {
         b.addEventListener('click', () => {
             document.querySelectorAll('.filter-btn').forEach(i => i.classList.remove('active'));
@@ -121,9 +172,7 @@
             loadPosts();
         });
     });
-
     loadWords();
-    loadPosts();
 </script>
 </body>
 </html>

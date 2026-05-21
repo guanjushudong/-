@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CHOOSE C树洞</title>
+    <title>我要倾诉 | CHOOSE C树洞</title>
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* 全局日夜模式变量，JS自动切换 */
         :root {
             --bg-main: #38322d;
             --bg-radial1: rgba(201, 168, 137, 0.28);
@@ -18,7 +17,6 @@
             --glow-color: rgba(212,184,153,0.25);
             --particle-opacity: 0.75;
         }
-        /* 白天模式 */
         [data-theme="day"] {
             --bg-main: #f8efe8;
             --bg-radial1: rgba(221, 186, 156, 0.2);
@@ -29,7 +27,6 @@
             --glow-color: rgba(212,184,153,0.35);
             --particle-opacity: 0.6;
         }
-        /* 基础组件样式 */
         .copy-btn{padding:8px 16px;background:rgba(201,168,137,0.4);border:1px solid rgba(230,205,185,0.35);border-radius:20px;color:var(--text-main);font-size:14px;cursor:pointer;transition:0.3s;}
         .copy-btn:hover{background:rgba(201,168,137,0.6);transform:scale(1.05);}
         .secret-wrap{display:flex;gap:12px;align-items:center;justify-content:center;margin:10px 0;}
@@ -45,12 +42,12 @@
 </head>
 <body>
 <div class="container">
-    <h1>📮 CHOOSE C 树洞</h1>
-    <p class="subtitle">向树洞悄悄诉说你的心事</p>
+    <h1>📮 我要倾诉</h1>
+    <p class="subtitle">向 CHOOSE C 树洞，悄悄诉说心事</p>
     <textarea id="contentInput" placeholder="写下你的心事，投入树洞..." maxlength="500"></textarea>
 
     <div class="category-group">
-        <div class="category-title">选择帖子分类（切换自动播放对应BGM）：</div>
+        <div class="category-title">选择帖子分类：</div>
         <div class="category-list">
             <div class="category-item active" data-cate="心情">😊 心情</div>
             <div class="category-item" data-cate="烦恼">😔 烦恼</div>
@@ -60,22 +57,21 @@
         </div>
     </div>
 
-    <!-- 严格按照你要求的3个勾选选项 -->
     <div class="public-toggle">
         <input type="checkbox" id="publicCheck" checked>
-        <label for="publicCheck">1. 是否展示到心事墙</label>
+        <label for="publicCheck">匿名公开到心事墙</label>
     </div>
     <div class="public-toggle">
         <input type="checkbox" id="commentCheck">
-        <label for="commentCheck">2. 是否开启评论功能</label>
+        <label for="commentCheck">开放评论功能</label>
     </div>
     <div class="public-toggle">
         <input type="checkbox" id="articleCheck">
-        <label for="articleCheck">3. 允许 CHOOSE C 将我的内容匿名发布到公众号文章</label>
+        <label for="articleCheck">允许发布到公众号</label>
     </div>
 
     <div class="slider">
-        <div class="slider-text">拖动滑块完成验证（验证后自动播放背景音乐）</div>
+        <div class="slider-text">拖动滑块完成验证（验证后播放BGM）</div>
         <div class="slider-block">→</div>
     </div>
 
@@ -90,24 +86,28 @@
         <p class="warning">⚠️ 暗号仅显示一次，关闭页面无法找回</p>
     </div>
 
-    <p class="links"><a href="wall.html">心事墙</a> | <a href="lookup.html">查回复/删帖</a></p>
+    <p class="links"><a href="wall.html">返回心事墙</a></p>
 </div>
 
-<!-- 背景音乐，按分类切换 -->
 <audio id="bgmAudio" loop preload="auto">
-
 <script src="js/supabase-client.js"></script>
 <script>
-    // ========== 1. 日夜模式自动切换 ==========
+    // 未验证直接跳转回首页验证
+    const VERIFY_DAY = 24 * 60 * 60 * 1000;
+    function checkVerify() {
+        const last = localStorage.getItem('verifyTime');
+        return last && Date.now() - last < VERIFY_DAY;
+    }
+    if(!checkVerify()) location.href='wall.html';
+
+    // 日夜模式
     function setDayNightTheme() {
         const hour = new Date().getHours();
-        const isDay = hour >= 6 && hour < 18;
-        document.body.setAttribute('data-theme', isDay ? 'day' : 'night');
+        document.body.setAttribute('data-theme', hour >=6 && hour <18 ? 'day' : 'night');
     }
     setDayNightTheme();
-    setInterval(setDayNightTheme, 60000); // 每分钟自动更新
 
-    // ========== 2. 分类对应背景音乐配置 ==========
+    // 分类BGM
     const bgmList = {
         "心情": "https://assets.mixkit.co/sfx/preview/mixkit-dreamy-night-time-ambience-1170.mp3",
         "烦恼": "https://assets.mixkit.co/sfx/preview/mixkit-sad-piano-melody-1169.mp3",
@@ -117,14 +117,8 @@
     };
     const bgmAudio = document.getElementById('bgmAudio');
     let isBgmPlay = false;
+    function changeBGM(cate) { bgmAudio.src = bgmList[cate]; if(isBgmPlay) bgmAudio.play(); }
 
-    // 切换分类自动切换BGM
-    function changeBGM(cate) {
-        bgmAudio.src = bgmList[cate];
-        if(isBgmPlay) bgmAudio.play();
-    }
-
-    // ========== 3. 原有功能全部保留 ==========
     let forbiddenWords = [];
     let verifyPass = false;
     let selectedCategory = "心情";
@@ -137,12 +131,8 @@
             forbiddenWords = text.split(/\r?\n/).map(w => w.trim()).filter(w => w);
         } catch (e) {}
     }
+    function checkBadWords(str) { return forbiddenWords.some(w => str.toLowerCase().includes(w.toLowerCase())); }
 
-    function checkBadWords(str) {
-        return forbiddenWords.some(w => str.toLowerCase().includes(w.toLowerCase()));
-    }
-
-    // 滑块验证（验证后开启BGM播放，解决浏览器自动播放限制）
     const slider = document.querySelector('.slider');
     const block = document.querySelector('.slider-block');
     let isMove = false;
@@ -155,13 +145,11 @@
             verifyPass = true;
             block.style.left = slider.offsetWidth - 60 + 'px';
             document.querySelector('.slider-text').textContent = '✅ 验证成功，BGM已开启';
-            isBgmPlay = true;
-            bgmAudio.play();
+            isBgmPlay = true; bgmAudio.play();
         }
     });
     document.addEventListener('mouseup', () => isMove = false);
 
-    // 分类切换
     document.querySelectorAll('.category-item').forEach(item => {
         item.addEventListener('click', () => {
             document.querySelectorAll('.category-item').forEach(i => i.classList.remove('active'));
@@ -190,14 +178,11 @@
 
         const secretCode = Math.random().toString(36).slice(2, 10);
         const { error } = await supabaseClient.from('posts').insert([{
-            content,
-            tag: selectedCategory,
+            content, tag: selectedCategory,
             is_public: document.getElementById('publicCheck').checked,
             is_comment_open: document.getElementById('commentCheck').checked,
             allow_article: document.getElementById('articleCheck').checked,
-            secret_code: secretCode,
-            like_count: 0,
-            replies: []
+            secret_code: secretCode, like_count: 0, replies: []
         }]);
 
         if (error) { alert('投稿失败，请稍后重试~'); return; }
@@ -206,7 +191,6 @@
         document.getElementById('secretDisplay').textContent = secretCode;
         document.getElementById('contentInput').value = '';
     };
-
     loadForbiddenWords();
     changeBGM(selectedCategory);
 </script>

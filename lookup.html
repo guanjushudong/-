@@ -31,11 +31,20 @@
     <input type="text" id="secretInput" placeholder="输入你的暗号" style="width:100%;padding:12px;border-radius:20px;margin:20px 0;">
     <button onclick="searchPost()" style="width:100%;">查询</button>
     <div id="result" style="margin-top:20px;"></div>
-    <p class="links"><a href="index.html">返回投稿</a> | <a href="wall.html">心事墙</a></p>
+    <p class="links"><a href="wall.html">返回心事墙</a></p>
 </div>
 
 <script src="js/supabase-client.js"></script>
 <script>
+    // 未验证跳转
+    const VERIFY_DAY = 24 * 60 * 60 * 1000;
+    function checkVerify() {
+        const last = localStorage.getItem('verifyTime');
+        return last && Date.now() - last < VERIFY_DAY;
+    }
+    if(!checkVerify()) location.href='wall.html';
+
+    // 日夜模式
     function setDayNightTheme() {
         const hour = new Date().getHours();
         document.body.setAttribute('data-theme', hour >=6 && hour <18 ? 'day' : 'night');
