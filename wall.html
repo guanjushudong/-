@@ -268,10 +268,11 @@
 
 <audio id="bgm" loop>
     <source src="https://assets.mixkit.co/sfx/preview/mixkit-relaxing-piano-ambience-1168.mp3" type="audio/mpeg">
-</audio>
+
 
 <script src="js/supabase-client.js"></script>
 <script>
+    // 日夜模式设置
     function setDayNightTheme() {
         const h = new Date().getHours();
         const isDay = h >=6 && h <18;
@@ -280,71 +281,110 @@
     setDayNightTheme();
     setInterval(setDayNightTheme, 60000);
 
+    // 验证常量
     const VERIFY_DAY = 24*60*60*1000;
-    function checkVerify(){
-        const t = localStorage.getItem('verifyTime');
-        return t && Date.now()-t < VERIFY_DAY;
-    }
+    let verifyPass = false;
 
-    const slider = document.querySelector('.slider');
-    const block = document.querySelector('.slider-block');
-    let isMove = false, startX = 0;
-
+    // BGM播放函数
     function playBGM(){
         const a = document.getElementById('bgm');
         a.volume = 0.3;
         a.play().catch(()=>{});
     }
 
-    block.addEventListener('pointerdown', e=>{
-        isMove=true; startX=e.clientX-block.getBoundingClientRect().left;
-        block.setPointerCapture(e.pointerId); e.preventDefault();
-    });
-    document.addEventListener('pointermove', e=>{
-        if(!isMove)return; e.preventDefault();
-        const r = slider.getBoundingClientRect();
-        let x = e.clientX - r.left - startX;
-        if(x<0)x=0;
-        if(x > r.width - block.offsetWidth){
-            x = r.width - block.offsetWidth;
-            localStorage.setItem('verifyTime', Date.now());
-            verifyBox.style.display='none'; mainBox.style.display='block';
-            playBGM(); loadPosts(); isMove=false;
-        }
-        block.style.left = x+'px';
-    });
-    document.addEventListener('pointerup', e=>{
-        if(isMove){ block.releasePointerCapture(e.pointerId); isMove=false;
-            if(parseInt(block.style.left) < slider.offsetWidth - block.offsetWidth -10) block.style.left='0px';
-        }
-    });
-
-    block.addEventListener('touchstart', e=>{
-        isMove=true; startX=e.touches[0].clientX-block.getBoundingClientRect().left; e.preventDefault();
-    });
-    document.addEventListener('touchmove', e=>{
-        if(!isMove)return; e.preventDefault();
-        const r = slider.getBoundingClientRect();
-        let x = e.touches[0].clientX - r.left - startX;
-        if(x<0)x=0;
-        if(x > r.width - block.offsetWidth){
-            x = r.width - block.offsetWidth;
-            localStorage.setItem('verifyTime', Date.now());
-            verifyBox.style.display='none'; mainBox.style.display='block';
-            playBGM(); loadPosts(); isMove=false;
-        }
-        block.style.left = x+'px';
-    });
-    document.addEventListener('touchend', ()=>{
-        if(isMove){ isMove=false;
-            if(parseInt(block.style.left) < slider.offsetWidth - block.offsetWidth -10) block.style.left='0px';
-        }
-    });
-
-    if(checkVerify()){
-        verifyBox.style.display='none'; mainBox.style.display='block';
+    // 检查验证状态
+    function checkVerify(){
+        const t = localStorage.getItem('verifyTime');
+        return t && Date.now()-t < VERIFY_DAY;
     }
 
+    // 滑块验证逻辑（PC+手机适配）
+    const slider = document.querySelector('.slider');
+    const block = document.querySelector('.slider-block');
+    let isMove = false, startX = 0;
+
+    block.addEventListener('pointerdown', e=>{
+        isMove=true; 
+        startX=e.clientX - block.getBoundingClientRect().left;
+        block.setPointerCapture(e.pointerId); 
+        e.preventDefault();
+    });
+
+    document.addEventListener('pointermove', e=>{
+        if(!isMove) return;
+        e.preventDefault();
+        
+        const sliderRect = slider.getBoundingClientRect();
+        let x = e.clientX - sliderRect.left - startX;
+        
+        // 限制滑块范围
+        if(x < 0) x = 0;
+        if(x > sliderRect.width - block.offsetWidth){
+            x = sliderRect.width - block.offsetWidth;
+            verifyPass = true;
+            localStorage.setItem('verifyTime', Date.now());
+            verifyBox.style.display='none'; 
+            mainBox.style.display='block';
+            playBGM(); 
+            loadPosts();
+            isMove = false;
+        }
+        block.style.left = x + 'px';
+    });
+
+    document.addEventListener('pointerup', e=>{
+        if(isMove){ 
+            block.releasePointerCapture(e.pointerId); 
+            isMove=false;
+            // 未通过验证，滑块归位
+            if(!verifyPass) block.style.left='0px';
+        }
+    });
+
+    // 移动端触摸事件
+    block.addEventListener('touchstart', e=>{
+        isMove=true; 
+        startX=e.touches[0].clientX - block.getBoundingClientRect().left;
+        e.preventDefault();
+    });
+
+    document.addEventListener('touchmove', e=>{
+        if(!isMove) return;
+        e.preventDefault();
+        
+        const sliderRect = slider.getBoundingClientRect();
+        let x = e.touches[0].clientX - sliderRect.left - startX;
+        
+        if(x < 0) x = 0;
+        if(x > sliderRect.width - block.offsetWidth){
+            x = sliderRect.width - block.offsetWidth;
+            verifyPass = true;
+            localStorage.setItem('verifyTime', Date.now());
+            verifyBox.style.display='none'; 
+            mainBox.style.display='block';
+            playBGM(); 
+            loadPosts();
+            isMove = false;
+        }
+        block.style.left = x + 'px';
+    });
+
+    document.addEventListener('touchend', ()=>{
+        if(isMove){ 
+            isMove=false;
+            if(!verifyPass) block.style.left='0px';
+        }
+    });
+
+    // 初始验证检查
+    if(checkVerify()){
+        verifyPass = true;
+        verifyBox.style.display='none'; 
+        mainBox.style.display='block';
+        loadPosts();
+    }
+
+    // 点赞功能
     const LIKE_KEY = "likeList";
     function getLikes(){ return JSON.parse(localStorage.getItem(LIKE_KEY)||"[]"); }
     function saveLikes(l){ localStorage.setItem(LIKE_KEY, JSON.stringify(l)); }

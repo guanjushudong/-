@@ -62,34 +62,45 @@
 
 <script src="js/supabase-client.js"></script>
 <script>
-    const VERIFY = 24*60*60*1000;
-    if(!localStorage.getItem('verifyTime') || Date.now()-localStorage.getItem('verifyTime')>VERIFY){
+    // 验证过期检查（仅检查，不包含滑块）
+    const VERIFY_DAY = 24*60*60*1000;
+    const verifyTime = localStorage.getItem('verifyTime');
+    
+    // 验证过期，跳转到首页
+    if(!verifyTime || Date.now()-parseInt(verifyTime) > VERIFY_DAY){
         location.href='wall.html';
     }
 
+    // 日夜模式设置
     function setTheme(){
         const h = new Date().getHours();
         document.body.dataset.theme = h>=6&&h<18 ? 'day' : 'night';
     }
     setTheme();
 
+    // 查询投稿
     async function search(){
         const k = key.value.trim();
         if(!k)return alert('请输入暗号');
-        const {data} = await supabaseClient.from('posts').select('*').eq('secret_code',k).single();
-        if(!data)return result.innerHTML='<p style=color:var(--text-primary);text-align:center>未找到</p>';
-        
-        const rep = Array.isArray(data.replies) ? data.replies : [];
-        result.innerHTML = `
-        <div class="post-card">
-            <div>【${data.tag}】</div>
-            <div style=margin:10px 0>${data.content}</div>
-            <div>点赞：${data.like_count}</div>
-            <div style=margin-top:10px><b>评论：</b>${rep.map(r=>`<div class=comment-item>${r.content||r}</div>`).join('')||'暂无评论'}</div>
-            <button class=del-btn onclick="del(${data.id},'${k}')">删除投稿</button>
-        </div>`;
+        try {
+            const {data} = await supabaseClient.from('posts').select('*').eq('secret_code',k).single();
+            if(!data)return result.innerHTML='<p style=color:var(--text-primary);text-align:center>未找到</p>';
+            
+            const rep = Array.isArray(data.replies) ? data.replies : [];
+            result.innerHTML = `
+            <div class="post-card">
+                <div>【${data.tag}】</div>
+                <div style=margin:10px 0>${data.content}</div>
+                <div>点赞：${data.like_count}</div>
+                <div style=margin-top:10px><b>评论：</b>${rep.map(r=>`<div class=comment-item>${r.content||r}</div>`).join('')||'暂无评论'}</div>
+                <button class=del-btn onclick="del(${data.id},'${k}')">删除投稿</button>
+            </div>`;
+        } catch(e) {
+            result.innerHTML='<p style=color:var(--text-primary);text-align:center>未找到</p>';
+        }
     }
 
+    // 删除投稿
     async function del(id,secret){
         if(!confirm('确定删除？'))return;
         const {error} = await supabaseClient.from('posts').delete().eq('id',id).eq('secret_code',secret);

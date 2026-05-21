@@ -53,24 +53,10 @@
             display:flex; align-items:center; gap:8px;
             margin:10px 0; color:var(--text-primary);
         }
-        .slider {
-            width:100%; max-width:320px; height:44px;
-            background:rgba(255,255,255,0.12); border-radius:22px;
-            position:relative; margin:20px auto; touch-action:none;
-        }
-        .slider-block {
-            width:64px; height:44px; background:rgba(201,168,137,0.7);
-            border-radius:22px; position:absolute; left:0; top:0;
-            display:flex; align-items:center; justify-content:center;
-            color:#fff; cursor:grab; touch-action:none;
-        }
-        .slider-text {
-            position:absolute; width:100%; text-align:center;
-            color:var(--text-secondary); line-height:44px;
-        }
         #submitBtn {
             width:100%; padding:16px; background:var(--btn-bg);
             border:none; border-radius:22px; color:#fff; font-size:17px; cursor:pointer;
+            margin:20px 0;
         }
         #resultBox { display:none; text-align:center; margin-top:20px; color:var(--text-primary); }
         .copy-btn {
@@ -107,11 +93,6 @@
         <label>开放评论</label>
     </div>
 
-    <div class="slider">
-        <div class="slider-text">滑动验证（验证后播放BGM）</div>
-        <div class="slider-block">→</div>
-    </div>
-
     <button id="submitBtn">提交投稿</button>
 
     <div id="resultBox">
@@ -126,20 +107,26 @@
     <p class="links"><a href="wall.html">← 返回心事墙</a></p>
 </div>
 
-<audio id="bgmAudio" loop></audio>
+<audio id="bgmAudio" loop>
 <script src="js/supabase-client.js"></script>
 <script>
-    const VERIFY = 24*60*60*1000;
-    if(!localStorage.getItem('verifyTime') || Date.now()-localStorage.getItem('verifyTime')>VERIFY){
+    // 验证过期检查（仅检查，不包含滑块）
+    const VERIFY_DAY = 24*60*60*1000;
+    const verifyTime = localStorage.getItem('verifyTime');
+    
+    // 验证过期，跳转到首页
+    if(!verifyTime || Date.now()-parseInt(verifyTime) > VERIFY_DAY){
         location.href='wall.html';
     }
 
+    // 日夜模式设置
     function setTheme(){
         const h = new Date().getHours();
         document.body.dataset.theme = h>=6&&h<18 ? 'day' : 'night';
     }
     setTheme();
 
+    // BGM配置
     const bgmList = {
         "心情":"https://assets.mixkit.co/sfx/preview/mixkit-dreamy-night-time-ambience-1170.mp3",
         "烦恼":"https://assets.mixkit.co/sfx/preview/mixkit-sad-piano-melody-1169.mp3",
@@ -148,39 +135,16 @@
         "情感":"https://assets.mixkit.co/sfx/preview/mixkit-romantic-piano-ambience-1171.mp3"
     };
     const audio = document.getElementById('bgmAudio');
-    let verifyPass = false;
     let cate = "心情";
 
+    // 切换BGM
     function changeBGM(c){
         audio.src = bgmList[c];
         audio.volume = 0.3;
-        if(verifyPass) audio.play().catch(()=>{});
+        audio.play().catch(()=>{}); // 验证已通过，直接播放
     }
 
-    const slider = document.querySelector('.slider');
-    const block = document.querySelector('.slider-block');
-    let isMove=false, startX=0;
-
-    block.addEventListener('pointerdown', e=>{
-        isMove=true; startX=e.clientX-block.getBoundingClientRect().left;
-        block.setPointerCapture(e.pointerId); e.preventDefault();
-    });
-    document.addEventListener('pointermove', e=>{
-        if(!isMove)return; e.preventDefault();
-        const r = slider.getBoundingClientRect();
-        let x = e.clientX - r.left - startX;
-        if(x>0 && x < r.width-block.offsetWidth) block.style.left=x+'px';
-        if(x >= r.width-block.offsetWidth){
-            verifyPass=true; block.style.left = r.width-block.offsetWidth+'px';
-            document.querySelector('.slider-text').textContent='✅ 验证成功';
-            audio.play().catch(()=>{});
-            isMove=false;
-        }
-    });
-    document.addEventListener('pointerup', e=>{
-        if(isMove){ block.releasePointerCapture(e.pointerId); isMove=false; if(!verifyPass) block.style.left='0px'; }
-    });
-
+    // 分类选择
     document.querySelectorAll('.category-item').forEach(i=>{
         i.onclick=()=>{
             document.querySelectorAll('.category-item').forEach(x=>x.classList.remove('active'));
@@ -188,10 +152,10 @@
         }
     });
 
+    // 提交投稿
     async function submit(){
         const c = contentInput.value.trim();
         if(!c)return alert('请输入内容');
-        if(!verifyPass)return alert('请完成验证');
 
         const secret = Math.random().toString(36).slice(2,10);
         await supabaseClient.from('posts').insert([{
@@ -206,13 +170,15 @@
         contentInput.value='';
     }
 
+    // 复制暗号
     function copy(){
         navigator.clipboard.writeText(secretDisplay.innerText);
         alert('复制成功');
     }
 
+    // 事件绑定
     submitBtn.onclick = submit;
-    changeBGM(cate);
+    changeBGM(cate); // 初始化BGM
 </script>
 </body>
 </html>
