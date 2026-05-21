@@ -3,115 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CHOOSE C树洞 - 向树洞倾诉心事</title>
+    <title>CHOOSE C树洞</title>
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .copy-btn{padding:8px 16px;background:rgba(201,168,137,0.4);border:1px solid rgba(230,205,185,0.35);border-radius:20px;color:#fff;font-size:14px;cursor:pointer;transition:0.3s;}
+        .copy-btn:hover{background:rgba(201,168,137,0.6);transform:scale(1.05);}
+        .secret-wrap{display:flex;gap:12px;align-items:center;justify-content:center;margin:10px 0;}
+        .slider{width:100%;height:40px;background:rgba(255,255,255,0.1);border-radius:20px;position:relative;margin:20px 0;overflow:hidden;}
+        .slider-block{width:60px;height:40px;background:rgba(201,168,137,0.6);border-radius:20px;position:absolute;left:0;top:0;cursor:grab;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;}
+        .slider-text{position:absolute;width:100%;text-align:center;color:rgba(255,240,225,0.7);line-height:40px;}
+        .tag-group{display:flex;gap:10px;margin:15px 0;flex-wrap:wrap;}
+        .tag{padding:6px 12px;border:1px solid rgba(255,240,225,0.3);border-radius:15px;color:#fff;font-size:14px;cursor:pointer;}
+        .tag.active{background:rgba(201,168,137,0.5);border-color:rgba(201,168,137,0.6);}
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>📮 CHOOSE C 树洞</h1>
-        <p class="subtitle">向 CHOOSE C 树洞，悄悄诉说你的心事</p>
-        <textarea id="contentInput" placeholder="写下你的心事，投入 CHOOSE C 树洞..." maxlength="500" required></textarea>
-        
-        <div class="public-toggle">
-            <input type="checkbox" id="publicCheck" checked>
-            <label for="publicCheck">匿名公开到 CHOOSE C 心事墙（可被回复）</label>
-        </div>
+<div class="container">
+    <h1>📮 CHOOSE C 树洞</h1>
+    <p class="subtitle">悄悄诉说你的心事</p>
+    <textarea id="contentInput" placeholder="写下你的心事..." maxlength="500"></textarea>
 
-        <div class="public-toggle">
-            <input type="checkbox" id="articleCheck">
-            <label for="articleCheck">允许 CHOOSE C 将我的内容匿名发布到公众号文章</label>
-        </div>
-        
-        <button id="submitBtn">投入 CHOOSE C 树洞</button>
-        
-        <div id="resultBox" style="display:none;">
-            <p>✅ 已投入 CHOOSE C 树洞！请务必保存你的暗号，用于查看回复：</p>
-            <div class="secret-code" id="secretDisplay"></div>
-            <p class="warning">⚠️ 暗号仅显示一次，关闭页面后无法找回</p>
-        </div>
-        
-        <p class="links">
-            <a href="wall.html">去看看 CHOOSE C 心事墙</a> | <a href="lookup.html">查回复</a>
-        </p>
+    <div class="tag-group">
+        <div class="tag active" data-tag="心情">心情</div>
+        <div class="tag" data-tag="烦恼">烦恼</div>
+        <div class="tag" data-tag="祝福">祝福</div>
+        <div class="tag" data-tag="日常">日常</div>
     </div>
-    
-    <script src="js/supabase-client.js"></script>
-    <script>
-        // 备用内置词库（txt读取失败时自动启用）
-        let forbiddenWords = [
-            "傻逼", "废物", "去死", "滚", "脑残", "垃圾", "杂种", "狗东西", "尼玛", "你妈", "草", "艹"
-        ];
 
-        // 读取本地 违禁词.txt 词库
-        async function loadForbiddenWords() {
-            try {
-                const res = await fetch('./违禁词.txt');
-                const text = await res.text();
-                forbiddenWords = text.split(/\r?\n/)
-                    .map(w => w.trim())
-                    .filter(w => w.length > 0);
-                console.log("✅ 成功加载违禁词库");
-            } catch (err) {
-                console.warn("⚠️ 违禁词库加载失败，使用内置词库");
-            }
+    <div class="public-toggle">
+        <input type="checkbox" id="publicCheck" checked>
+        <label for="publicCheck">匿名公开到心事墙</label>
+    </div>
+    <div class="public-toggle">
+        <input type="checkbox" id="commentCheck">
+        <label for="commentCheck">开放评论功能</label>
+    </div>
+    <div class="public-toggle">
+        <input type="checkbox" id="articleCheck">
+        <label for="articleCheck">允许发布到公众号</label>
+    </div>
+
+    <div class="slider">
+        <div class="slider-text">拖动滑块完成验证</div>
+        <div class="slider-block">→</div>
+    </div>
+
+    <button id="submitBtn">投入树洞</button>
+
+    <div id="resultBox" style="display:none;">
+        <p>✅ 投稿成功！保存你的暗号：</p>
+        <div class="secret-wrap">
+            <div class="secret-code" id="secretDisplay"></div>
+            <button class="copy-btn" id="copyBtn">复制暗号</button>
+        </div>
+        <p class="warning">⚠️ 暗号仅显示一次</p>
+    </div>
+
+    <p class="links"><a href="wall.html">心事墙</a> | <a href="lookup.html">查回复/删帖</a></p>
+</div>
+
+<script src="js/supabase-client.js"></script>
+<script>
+    let forbiddenWords = [];
+    let verifyPass = false;
+    let selectedTag = "心情";
+    const POST_LIMIT = 60;
+
+    async function loadForbiddenWords() {
+        try {
+            const res = await fetch('./违禁词.txt');
+            const text = await res.text();
+            forbiddenWords = text.split(/\r?\n/).map(w => w.trim()).filter(w => w);
+        } catch (e) {}
+    }
+
+    function checkBad(str) {
+        return forbiddenWords.some(w => str.toLowerCase().includes(w.toLowerCase()));
+    }
+
+    const slider = document.querySelector('.slider');
+    const block = document.querySelector('.slider-block');
+    let isMove = false;
+    block.addEventListener('mousedown', () => isMove = true);
+    document.addEventListener('mousemove', (e) => {
+        if (!isMove) return;
+        let x = e.clientX - slider.offsetLeft;
+        if (x > 0 && x < slider.offsetWidth - 60) block.style.left = x + 'px';
+        if (x >= slider.offsetWidth - 60) {
+            verifyPass = true;
+            block.style.left = slider.offsetWidth - 60 + 'px';
+            document.querySelector('.slider-text').textContent = '✅ 验证成功';
         }
-        loadForbiddenWords();
+    });
+    document.addEventListener('mouseup', () => isMove = false);
 
-        // 违禁词检测
-        function checkForbiddenWords(content) {
-            const lowerContent = content.toLowerCase();
-            for (let word of forbiddenWords) {
-                const w = word.toLowerCase();
-                if (w && lowerContent.includes(w)) {
-                    return word;
-                }
-            }
-            return null;
-        }
-
-        function generateSecret() {
-            return Math.random().toString(36).substring(2, 10);
-        }
-
-        document.getElementById('submitBtn').addEventListener('click', async () => {
-            const content = document.getElementById('contentInput').value.trim();
-            
-            // 1. 空内容提示
-            if (!content) {
-                alert('❌ 投稿失败！请写下你的心事再提交~');
-                return;
-            }
-
-            // 2. 违禁词检测【明确提示原因】
-            const badWord = checkForbiddenWords(content);
-            if (badWord) {
-                alert(`❌ 投稿失败！内容包含违禁词「${badWord}」，请文明倾诉后重新提交~`);
-                return;
-            }
-
-            const isPublic = document.getElementById('publicCheck').checked;
-            const allowArticle = document.getElementById('articleCheck').checked;
-            const secret = generateSecret();
-
-            const { error } = await supabaseClient
-                .from('posts')
-                .insert([{ content, is_public: isPublic, allow_article: allowArticle, secret_code: secret }]);
-
-            // 3. 服务器/网络失败提示
-            if (error) {
-                alert('❌ 投稿失败！服务器异常，请稍后重试~');
-                console.error(error);
-                return;
-            }
-
-            // 成功
-            document.getElementById('resultBox').style.display = 'block';
-            document.getElementById('secretDisplay').textContent = secret;
-            document.getElementById('contentInput').value = '';
-            document.getElementById('publicCheck').checked = true;
-            document.getElementById('articleCheck').checked = false;
+    document.querySelectorAll('.tag').forEach(t => {
+        t.addEventListener('click', () => {
+            document.querySelectorAll('.tag').forEach(i => i.classList.remove('active'));
+            t.classList.add('active');
+            selectedTag = t.dataset.tag;
         });
-    </script>
+    });
+
+    document.getElementById('copyBtn').onclick = async () => {
+        await navigator.clipboard.writeText(document.getElementById('secretDisplay').innerText);
+        alert('✅ 复制成功！');
+    }
+
+    document.getElementById('submitBtn').onclick = async () => {
+        const content = document.getElementById('contentInput').value.trim();
+        if (!content) return alert('请输入内容');
+        if (checkBad(content)) return alert('请文明倾诉后重新提交~');
+        if (!verifyPass) return alert('请完成滑块验证');
+
+        const last = localStorage.getItem('lastPostTime');
+        const now = Date.now() / 1000;
+        if (last && now - last < POST_LIMIT) return alert(`发帖频繁！请${Math.ceil(POST_LIMIT - (now - last))}秒后重试`);
+
+        const secret = Math.random().toString(36).slice(2, 10);
+        const { error } = await supabaseClient.from('posts').insert([{
+            content, tag: selectedTag,
+            is_public: document.getElementById('publicCheck').checked,
+            is_comment_open: document.getElementById('commentCheck').checked,
+            allow_article: document.getElementById('articleCheck').checked,
+            secret_code: secret, like_count: 0, replies: []
+        }]);
+
+        if (error) { alert('投稿失败'); return; }
+        localStorage.setItem('lastPostTime', now);
+        document.getElementById('resultBox').style.display = 'block';
+        document.getElementById('secretDisplay').textContent = secret;
+    };
+
+    loadForbiddenWords();
+</script>
 </body>
 </html>

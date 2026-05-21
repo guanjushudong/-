@@ -3,53 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CHOOSE C树洞 - 查回复</title>
+    <title>查回复/删帖</title>
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>.del-btn{background:#ff4444;border:none;color:#fff;padding:5px 10px;border-radius:10px;cursor:pointer;margin-top:10px;}</style>
 </head>
 <body>
-    <div class="container">
-        <h1>🔍 CHOOSE C 查找我的回复</h1>
-        <p class="subtitle">查询你投入 CHOOSE C 树洞的心事回复</p>
-        <input type="text" id="secretInput" placeholder="输入你的8位暗号" maxlength="8">
-        <button id="searchBtn">查询回复</button>
-        <div id="resultCard" style="display:none;"></div>
-        <p class="links">
-            <a href="index.html">再次投入 CHOOSE C 树洞</a> | <a href="wall.html">CHOOSE C 心事墙</a>
-        </p>
-    </div>
-    
-    <script src="js/supabase-client.js"></script>
-    <script>
-        document.getElementById('searchBtn').addEventListener('click', async () => {
-            const code = document.getElementById('secretInput').value.trim();
-            if (!code) return alert('请输入暗号，查询 CHOOSE C 树洞回复');
-            
-            const { data, error } = await supabaseClient.rpc('get_my_post', { code });
-            
-            const card = document.getElementById('resultCard');
-            if (error || !data || data.length === 0) {
-                card.style.display = 'block';
-                card.innerHTML = '<p>未找到该暗号对应的 CHOOSE C 树洞投稿，请检查暗号是否正确。</p>';
-                return;
-            }
-            
-            const post = data[0];
-            card.style.display = 'block';
-            card.innerHTML = `
-                <div class="post-card">
-                    <p class="post-content">${escapeHtml(post.content)}</p>
-                    ${post.reply 
-                        ? `<div class="official-reply"><span>CHOOSE C 回复：</span>${escapeHtml(post.reply)}</div>` 
-                        : '<p class="no-reply">CHOOSE C 暂未回复，请耐心等待 ⏳</p>'}
-                    <p class="post-meta">${new Date(post.created_at).toLocaleDateString()}</p>
-                </div>
-            `;
-        });
+<div class="container">
+    <h1>🔍 查回复 / 删帖</h1>
+    <input type="text" id="secretInput" placeholder="输入你的暗号" style="width:100%;padding:12px;border-radius:20px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,240,225,0.2);color:#fff;margin:20px 0;">
+    <button onclick="searchPost()" style="width:100%;">查询</button>
+    <div id="result" style="margin-top:20px;"></div>
+    <p class="links"><a href="index.html">返回投稿</a> | <a href="wall.html">心事墙</a></p>
+</div>
 
-        function escapeHtml(text) {
-            return text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+<script src="js/supabase-client.js"></script>
+<script>
+    async function searchPost() {
+        const secret = document.getElementById('secretInput').value.trim();
+        if (!secret) return alert('请输入暗号');
+        const { data } = await supabaseClient.from('posts').select('*').eq('secret_code', secret).single();
+        if (!data) return alert('未找到该帖子');
+        
+        document.getElementById('result').innerHTML = `
+            <div class="post-card">
+                <div>【${data.tag}】</div>
+                <div class="post-content">${data.content}</div>
+                <div class="post-meta">点赞：${data.like_count}</div>
+                <div style="margin:10px 0;"><b>评论：</b>${data.replies.map(r=>`<div class="comment-item">${r.content}</div>`).join('')||'暂无评论'}</div>
+                <button class="del-btn" onclick="deletePost(${data.id},'${secret}')">🗑️ 删帖</button>
+            </div>
+        `;
+    }
+
+    async function deletePost(id, secret) {
+        if (confirm('确定删除该帖子？')) {
+            const { error } = await supabaseClient.from('posts').delete().eq('id', id).eq('secret_code', secret);
+            error ? alert('删除失败') : alert('删除成功！');
+            document.getElementById('result').innerHTML = '';
         }
-    </script>
+    }
+</script>
 </body>
 </html>
