@@ -2,99 +2,260 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CHOOSE C树洞 - 管理后台</title>
-    <link rel="stylesheet" href="css/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>管理后台 | CHOOSE C 树洞</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+        }
+        :root {
+            --bg-main: #38322d;
+            --text-primary: #fff8f0;
+            --text-secondary: #e6d9cc;
+            --border-color: rgba(255,240,225,0.22);
+            --btn-primary: rgba(201,168,137,0.7);
+            --btn-danger: #ff4d4f;
+            --btn-success: #52c41a;
+        }
+        [data-theme="day"] {
+            --bg-main: #f8efe8;
+            --text-primary: #4a3c30;
+            --text-secondary: #6d5b4b;
+            --border-color: rgba(160,125,95,0.3);
+        }
+        body {
+            background: var(--bg-main);
+            min-height: 100vh;
+            padding: 20px 16px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+        }
+        .login-box {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 400px;
+            margin: 100px auto;
+        }
+        input {
+            width: 100%;
+            padding: 14px;
+            border-radius: 16px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            border-radius: 16px;
+            border: none;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .btn-primary {
+            background: var(--btn-primary);
+        }
+        .btn-danger {
+            background: var(--btn-danger);
+        }
+        .btn-success {
+            background: var(--btn-success);
+        }
+        .post-card {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 20px;
+            margin: 16px 0;
+            color: var(--text-primary);
+        }
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .post-tag {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        .post-status {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+        .status-open {
+            background: rgba(82,196,26,0.2);
+            color: #52c41a;
+        }
+        .status-close {
+            background: rgba(255,77,79,0.2);
+            color: #ff4d4f;
+        }
+        .post-content {
+            font-size: 15px;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+        .post-time {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+        .post-reply {
+            background: rgba(255,255,255,0.08);
+            padding: 10px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+        .btn-group button {
+            flex: 1;
+            padding: 8px;
+            font-size: 14px;
+        }
+        .links {
+            text-align: center;
+            margin-top: 30px;
+        }
+        .links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+        }
+    </style>
 </head>
 <body>
-    <div class="container" id="loginBox">
-        <h1>CHOOSE C 管理员登录</h1>
-        <p class="subtitle">管理 CHOOSE C 树洞所有投稿</p>
-        <input type="email" id="email" placeholder="邮箱">
-        <input type="password" id="password" placeholder="密码">
-        <button id="loginBtn">登录后台</button>
-    </div>
-
-    <div class="container" id="adminPanel" style="display:none;">
-        <h1>📋 CHOOSE C 树洞 · 投稿管理</h1>
-        <button id="logoutBtn">退出登录</button>
-        <div id="adminPostsList"></div>
-    </div>
+<div class="container">
+    <h1>🔐 管理员后台</h1>
     
-    <script src="js/supabase-client.js"></script>
-    <script>
-        let authUser = null;
+    <!-- 登录界面 -->
+    <div id="loginBox" class="login-box">
+        <input type="password" id="adminPassword" placeholder="请输入管理员密码">
+        <button class="btn-primary" onclick="login()">登录</button>
+    </div>
 
-        supabaseClient.auth.getSession().then(({ data: { session } }) => {
-            if (session) {
-                authUser = session.user;
-                showAdminPanel();
-            }
-        });
+    <!-- 管理界面 -->
+    <div id="adminPanel" style="display: none;">
+        <div id="postList"></div>
+        <p class="links"><a href="wall.html">← 返回心事墙</a></p>
+    </div>
+</div>
 
-        document.getElementById('loginBtn').addEventListener('click', async () => {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-            if (error) return alert('登录失败：' + error.message);
-            authUser = data.user;
+<script src="js/supabase-client.js"></script>
+<script>
+    // 管理员密码（请修改为你自己的密码）
+    const ADMIN_PASSWORD = "Gj666888";
+
+    function setTheme(){const h=new Date().getHours();document.body.dataset.theme=h>=6&&h<18?'day':'night';}
+    setTheme();
+
+    // 检查是否已登录
+    if(localStorage.getItem('adminLoggedIn') === 'true'){
+        showAdminPanel();
+    }
+
+    // 登录
+    function login(){
+        const password = adminPassword.value.trim();
+        if(password === ADMIN_PASSWORD){
+            localStorage.setItem('adminLoggedIn', 'true');
             showAdminPanel();
-        });
+        }else{
+            alert('密码错误');
+        }
+    }
 
-        document.getElementById('logoutBtn').addEventListener('click', async () => {
-            await supabaseClient.auth.signOut();
-            location.reload();
-        });
+    // 显示管理面板
+    function showAdminPanel(){
+        loginBox.style.display = 'none';
+        adminPanel.style.display = 'block';
+        loadAllPosts();
+    }
 
-        function showAdminPanel() {
-            document.getElementById('loginBox').style.display = 'none';
-            document.getElementById('adminPanel').style.display = 'block';
-            loadAllPosts();
+    // 加载所有帖子
+    async function loadAllPosts(){
+        const {data, error} = await supabaseClient
+            .from('posts')
+            .select('*')
+            .order('created_at', {ascending: false});
+        
+        if(error){
+            alert('加载失败：' + error.message);
+            return;
         }
 
-        async function loadAllPosts() {
-            const { data, error } = await supabaseClient
-                .from('posts')
-                .select('*')
-                .order('created_at', { ascending: false });
+        postList.innerHTML = data.map(p=>{
+            return `
+            <div class="post-card">
+                <div class="post-header">
+                    <span class="post-tag">【${p.tag}】 ID: ${p.id}</span>
+                    <span class="post-status ${p.allow_publish ? 'status-open' : 'status-close'}">
+                        ${p.allow_publish ? '评论已开启' : '评论已关闭'}
+                    </span>
+                </div>
+                <div class="post-content">${p.content}</div>
+                <div class="post-time">${new Date(p.created_at).toLocaleString()}</div>
+                ${p.reply ? `<div class="post-reply">官方回复：${p.reply}</div>` : ''}
+                <div class="btn-group">
+                    <button class="${p.allow_publish ? 'btn-danger' : 'btn-success'}" 
+                            onclick="toggleComment(${p.id}, ${p.allow_publish})">
+                        ${p.allow_publish ? '关闭评论' : '开启评论'}
+                    </button>
+                    <button class="btn-danger" onclick="deletePost(${p.id})">删除帖子</button>
+                </div>
+            </div>`;
+        }).join('');
+    }
 
-            if (error) return alert('加载 CHOOSE C 树洞投稿失败');
-            const list = document.getElementById('adminPostsList');
-            list.innerHTML = '';
-            
-            data.forEach(post => {
-                const item = document.createElement('div');
-                item.className = 'admin-post-card';
-                item.innerHTML = `
-                    <p><strong>[${post.is_public ? '公开' : '私密'}]</strong> ${escapeHtml(post.content)}</p>
-                    <p>树洞暗号：<code>${post.secret_code}</code></p>
-                    <p>CHOOSE C 回复：${post.reply ? escapeHtml(post.reply) : '（无）'}</p>
-                    <textarea class="replyInput" id="reply-${post.id}" placeholder="输入 CHOOSE C 树洞回复...">${post.reply || ''}</textarea>
-                    <button onclick="submitReply(${post.id})">保存回复</button>
-                    <hr>
-                `;
-                list.appendChild(item);
-            });
+    // 切换评论状态
+    async function toggleComment(id, currentStatus){
+        const {error} = await supabaseClient
+            .from('posts')
+            .update({allow_publish: !currentStatus})
+            .eq('id', id);
+        
+        if(error){
+            alert('操作失败：' + error.message);
+            return;
         }
+        loadAllPosts();
+    }
 
-        window.submitReply = async (postId) => {
-            const replyText = document.getElementById(`reply-${postId}`).value.trim();
-            if (!replyText) return alert('回复不能为空');
-            const { error } = await supabaseClient
-                .from('posts')
-                .update({ reply: replyText })
-                .eq('id', postId);
-            if (error) alert('更新失败');
-            else {
-                alert('CHOOSE C 树洞回复已保存！');
-                loadAllPosts();
-            }
-        };
-
-        function escapeHtml(text) {
-            return text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    // 删除帖子
+    async function deletePost(id){
+        if(!confirm('确定要删除这条帖子吗？此操作不可恢复！'))return;
+        
+        const {error} = await supabaseClient
+            .from('posts')
+            .delete()
+            .eq('id', id);
+        
+        if(error){
+            alert('删除失败：' + error.message);
+            return;
         }
-    </script>
+        loadAllPosts();
+    }
+</script>
 </body>
 </html>

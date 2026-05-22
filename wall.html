@@ -60,6 +60,9 @@
         .post-content {font-size:15px;line-height:1.7;color:var(--text-primary);margin-bottom:10px;}
         .post-time {font-size:12px;color:var(--text-secondary);margin-bottom:14px;}
         .comment-area {border-top:1px solid var(--border-color);padding-top:12px;margin-top:10px;}
+        .comment-input-wrap {display:flex;gap:8px;margin-bottom:10px;}
+        .comment-input {flex:1;padding:8px 12px;border-radius:16px;background:rgba(255,255,255,0.08);border:1px solid var(--border-color);color:var(--text-primary);font-size:14px;}
+        .comment-send {padding:8px 14px;border-radius:16px;border:none;background:rgba(201,168,137,0.5);color:#fff;cursor:pointer;}
         .comment-close-tip {font-size:13px;color:var(--text-secondary);margin-bottom:8px;}
         .comment-item {font-size:14px;color:var(--text-primary);line-height:1.6;margin:6px 0;}
         .links {text-align:center;margin-top:30px;font-size:14px;}
@@ -83,7 +86,7 @@
             <button class="filter-btn" data-tag="互动功能区">互动专区</button>
         </div>
         <div id="postList"></div>
-        <p class="links"><a href="lookup.html">🔍 查回复/删帖</a></p>
+        <p class="links"><a href="lookup.html">🔍 查回复/删帖</a> | <a href="admin.html">🔐 管理后台</a></p>
     </div>
 
 <script src="js/supabase-client.js"></script>
@@ -107,7 +110,6 @@
         const myLikes=getLikes();
         postList.innerHTML=data.map(p=>{
             const isLiked=myLikes.includes(p.id);
-            // 读取数据库真实字段：reply=评论，allow_publish=开关
             return `
             <div class="post-card">
                 <div class="post-card-top">
@@ -126,7 +128,7 @@
                         <button class="comment-send" onclick="sendComment(${p.id})">发送</button>
                     </div>`:`<div class="comment-close-tip">💬 评论已关闭（仅查看历史回复）</div>`}
                     <div class="comment-list">
-                        ${p.reply ? `<div class="comment-item">${p.reply}</div>` : '<div class="comment-item" style="color:var(--text-secondary)">暂无回复</div>'}
+                        ${p.reply ? `<div class="comment-item"><b>官方回复：</b>${p.reply}</div>` : '<div class="comment-item" style="color:var(--text-secondary)">暂无回复</div>'}
                     </div>
                 </div>
             </div>`;
@@ -140,7 +142,6 @@
         saveLikes(likes);loadPosts();
     }
 
-    // 禁用新增评论
     async function sendComment(id){alert("评论功能已关闭，无法新增");}
 
     document.querySelectorAll('.filter-btn').forEach(btn=>{

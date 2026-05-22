@@ -48,7 +48,7 @@
                 <div><b>分类：</b>${data.tag}</div>
                 <div style="margin:10px 0;"><b>内容：</b>${data.content}</div>
                 <div><b>点赞：</b>${data.like_count||0}</div>
-                <div style="margin-top:10px;"><b>回复：</b>${data.reply||'暂无回复'}</div>
+                <div style="margin-top:10px;"><b>官方回复：</b>${data.reply||'暂无回复'}</div>
                 <button class="del-btn" onclick="deletePost(${data.id},'${secret}')">🗑️ 删除</button>
             </div>`;
         }catch(e){result.innerHTML='<p style="color:var(--text-primary);text-align:center;">未找到投稿</p>';}
