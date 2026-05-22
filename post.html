@@ -9,7 +9,7 @@
         * {margin:0;padding:0;box-sizing:border-box;font-family:"PingFang SC","Microsoft YaHei",sans-serif;-webkit-tap-highlight-color:transparent;}
         :root {--bg-main:#38322d;--text-primary:#fff8f0;--text-secondary:#e6d9cc;--border-color:rgba(255,240,225,0.22);--btn-bg:rgba(201,168,137,0.65);}
         [data-theme="day"]{--bg-main:#f8efe8;--text-primary:#4a3c30;--text-secondary:#6d5b4b;--border-color:rgba(160,125,95,0.3);--btn-bg:rgba(201,168,137,0.8);}
-        body{background:var(--bg-main);padding:20px 16px;min-height:100vh;transition:background 0.6s;}
+        body{background:var(--bg-main);padding:20px 16px;min-height:100vh;transition:background 0.6s;touch-action: manipulation;}
         .bgm-toggle{position:fixed;top:15px;right:15px;width:40px;height:40px;border-radius:50%;background:rgba(201,168,137,0.7);color:#fff;border:none;font-size:18px;cursor:pointer;z-index:9999;}
         .container{max-width:800px;margin:0 auto;}
         h1{text-align:center;color:var(--text-primary);margin-bottom:10px;}
@@ -26,10 +26,13 @@
         .copy-btn{padding:8px 16px;background:rgba(201,168,137,0.4);border-radius:20px;color:#fff;cursor:pointer;border:none;}
         .links{text-align:center;margin-top:20px;}
         .links a{color:var(--text-secondary);text-decoration:none;}
+        audio { display: none; }
     </style>
 </head>
 <body>
     <button class="bgm-toggle" id="bgmToggle">🔊</button>
+    <audio id="bgm" loop preload="auto" src="https://assets.mixkit.co/sfx/preview/mixkit-relaxing-piano-ambience-1168.mp3">
+
 <div class="container">
     <h1>📮 我要倾诉</h1>
     <p class="subtitle">匿名投稿，温柔倾听，你的心事有人懂</p>
@@ -53,7 +56,6 @@
         <input type="checkbox" id="commentCheck" checked>
         <label>开放评论功能</label>
     </div>
-    <!-- 找回：允许摘取官方公众号 -->
     <div class="public-toggle">
         <input type="checkbox" id="allowPublishCheck">
         <label>允许CHOOS C摘取到官方公众号</label>
@@ -74,20 +76,55 @@
     if(!verifyTime||Date.now()-parseInt(verifyTime)>VERIFY_DAY){location.href='index.html';}
     function setTheme(){const h=new Date().getHours();document.body.dataset.theme=h>=6&&h<18?'day':'night';}setTheme();
 
-    // ========== 独立BGM ==========
-    let bgm = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-relaxing-piano-ambience-1168.mp3");
-    bgm.loop = true;
+    // ========== 微信BGM终极兼容 ==========
+    const bgm = document.getElementById('bgm');
     bgm.volume = 0.3;
     const bgmToggle=document.getElementById('bgmToggle');
 
-    if(localStorage.getItem('bgmPlaying')==='true'){
-        bgm.play().catch(()=>{bgmToggle.textContent='🔇';localStorage.setItem('bgmPlaying','false');});
-    }else{bgmToggle.textContent='🔇';}
+    document.addEventListener('WeixinJSBridgeReady', function() {
+        bgm.load();
+        if(localStorage.getItem('bgmPlaying') === 'true'){
+            bgm.play().catch(()=>{});
+        }
+    }, false);
 
-    bgmToggle.onclick=()=>{
-        if(bgm.paused){bgm.play();bgmToggle.textContent='🔊';localStorage.setItem('bgmPlaying','true');}
-        else{bgm.pause();bgmToggle.textContent='🔇';localStorage.setItem('bgmPlaying','false');}
+    document.addEventListener('touchstart', function() {
+        if(bgm.paused && localStorage.getItem('bgmPlaying') !== 'false'){
+            bgm.play().catch(()=>{});
+            bgmToggle.textContent = '🔊';
+            localStorage.setItem('bgmPlaying', 'true');
+        }
+    }, {passive: true});
+
+    document.addEventListener('click', function() {
+        if(bgm.paused && localStorage.getItem('bgmPlaying') !== 'false'){
+            bgm.play().catch(()=>{});
+            bgmToggle.textContent = '🔊';
+            localStorage.setItem('bgmPlaying', 'true');
+        }
+    });
+
+    bgmToggle.onclick = function(e) {
+        e.stopPropagation();
+        if(bgm.paused){
+            bgm.play().catch(()=>{});
+            bgmToggle.textContent = '🔊';
+            localStorage.setItem('bgmPlaying', 'true');
+        }else{
+            bgm.pause();
+            bgmToggle.textContent = '🔇';
+            localStorage.setItem('bgmPlaying', 'false');
+        }
     };
+
+    if(localStorage.getItem('bgmPlaying') === 'true'){
+        bgm.play().catch(()=>{
+            bgmToggle.textContent = '🔇';
+            localStorage.setItem('bgmPlaying', 'false');
+        });
+    }else{
+        bgmToggle.textContent = '🔇';
+    }
 
     const bgmList={
         "生活日常类":"https://assets.mixkit.co/sfx/preview/mixkit-relaxing-piano-ambience-1168.mp3",

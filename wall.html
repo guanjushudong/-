@@ -39,6 +39,7 @@
             background: var(--bg-main);
             min-height: 100vh;
             transition: background 0.6s ease;
+            touch-action: manipulation;
         }
         .bgm-toggle {
             position: fixed;top:15px;right:15px;width:40px;height:40px;border-radius:50%;
@@ -68,10 +69,13 @@
         .comment-item {font-size:14px;color:var(--text-primary);line-height:1.6;margin:6px 0;}
         .links {text-align:center;margin-top:30px;font-size:14px;}
         .links a {color:var(--text-secondary);text-decoration:none;}
+        audio { display: none; }
     </style>
 </head>
 <body>
     <button class="bgm-toggle" id="bgmToggle">🔊</button>
+    <audio id="bgm" loop preload="auto" src="https://assets.mixkit.co/sfx/preview/mixkit-relaxing-piano-ambience-1168.mp3">
+
     <div class="notice-bar">
         <div class="notice-text">【CHOOSE C 树洞】专属情绪避风港 | 匿名倾诉 | 温柔倾听 | 守护你的所有心事</div>
     </div>
@@ -100,20 +104,59 @@
     function setTheme(){const h=new Date().getHours();document.body.dataset.theme=h>=6&&h<18?'day':'night';}
     setTheme();setInterval(setTheme,60000);
 
-    // ========== 独立BGM，微信兼容 ==========
-    let bgm = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-relaxing-piano-ambience-1168.mp3");
-    bgm.loop = true;
+    // ========== 微信BGM终极兼容 ==========
+    const bgm = document.getElementById('bgm');
     bgm.volume = 0.3;
     const bgmToggle = document.getElementById('bgmToggle');
 
-    if(localStorage.getItem('bgmPlaying')==='true'){
-        bgm.play().catch(()=>{bgmToggle.textContent='🔇';localStorage.setItem('bgmPlaying','false');});
-    }else{bgmToggle.textContent='🔇';}
+    document.addEventListener('WeixinJSBridgeReady', function() {
+        bgm.load();
+        if(localStorage.getItem('bgmPlaying') === 'true'){
+            bgm.play().catch(()=>{});
+        }
+    }, false);
 
-    bgmToggle.onclick=()=>{
-        if(bgm.paused){bgm.play();bgmToggle.textContent='🔊';localStorage.setItem('bgmPlaying','true');}
-        else{bgm.pause();bgmToggle.textContent='🔇';localStorage.setItem('bgmPlaying','false');}
+    // 全页面触摸触发播放
+    document.addEventListener('touchstart', function() {
+        if(bgm.paused && localStorage.getItem('bgmPlaying') !== 'false'){
+            bgm.play().catch(()=>{});
+            bgmToggle.textContent = '🔊';
+            localStorage.setItem('bgmPlaying', 'true');
+        }
+    }, {passive: true});
+
+    // 全页面点击触发播放
+    document.addEventListener('click', function() {
+        if(bgm.paused && localStorage.getItem('bgmPlaying') !== 'false'){
+            bgm.play().catch(()=>{});
+            bgmToggle.textContent = '🔊';
+            localStorage.setItem('bgmPlaying', 'true');
+        }
+    });
+
+    // BGM开关
+    bgmToggle.onclick = function(e) {
+        e.stopPropagation();
+        if(bgm.paused){
+            bgm.play().catch(()=>{});
+            bgmToggle.textContent = '🔊';
+            localStorage.setItem('bgmPlaying', 'true');
+        }else{
+            bgm.pause();
+            bgmToggle.textContent = '🔇';
+            localStorage.setItem('bgmPlaying', 'false');
+        }
     };
+
+    // 页面加载时恢复播放状态
+    if(localStorage.getItem('bgmPlaying') === 'true'){
+        bgm.play().catch(()=>{
+            bgmToggle.textContent = '🔇';
+            localStorage.setItem('bgmPlaying', 'false');
+        });
+    }else{
+        bgmToggle.textContent = '🔇';
+    }
 
     const LIKE_KEY="likeList";
     function getLikes(){return JSON.parse(localStorage.getItem(LIKE_KEY)||"[]");}
@@ -127,7 +170,6 @@
         const myLikes=getLikes();
         postList.innerHTML=data.map(p=>{
             const isLiked=myLikes.includes(p.id);
-            // 读取数据库真实字段：reply=评论，allow_publish=开关
             return `
             <div class="post-card">
                 <div class="post-card-top">
@@ -160,7 +202,6 @@
         saveLikes(likes);loadPosts();
     }
 
-    // 禁用新增评论
     async function sendComment(id){alert("评论功能已关闭，无法新增");}
 
     document.querySelectorAll('.filter-btn').forEach(btn=>{

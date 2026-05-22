@@ -33,7 +33,7 @@
             align-items: center;
             justify-content: center;
             transition: background 0.6s ease;
-            touch-action: none;
+            touch-action: manipulation;
         }
         .verify-container {
             text-align: center;
@@ -91,15 +91,19 @@
             font-size: 16px;
             margin-top: 20px;
         }
-        /* BGM开关 */
         .bgm-toggle {
             position: fixed;top:15px;right:15px;width:40px;height:40px;border-radius:50%;
             background:rgba(201,168,137,0.7);color:#fff;border:none;font-size:18px;cursor:pointer;z-index:9999;
         }
+        /* 隐藏原生音频 */
+        audio { display: none; }
     </style>
 </head>
 <body>
     <button class="bgm-toggle" id="bgmToggle">🔊</button>
+    <!-- 原生音频标签（微信唯一支持的可靠方式） -->
+    <audio id="bgm" loop preload="auto" src="https://assets.mixkit.co/sfx/preview/mixkit-relaxing-piano-ambience-1168.mp3">
+
     <div class="verify-container">
         <div class="verify-title">💌 CHOOSE C 树洞</div>
         <div class="verify-desc">
@@ -131,18 +135,38 @@
     }
 
     // ========== 微信BGM终极兼容 ==========
-    let bgm = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-relaxing-piano-ambience-1168.mp3");
-    bgm.loop = true;
+    const bgm = document.getElementById('bgm');
     bgm.volume = 0.3;
     const bgmToggle = document.getElementById('bgmToggle');
 
-    // 微信内核就绪强制加载
-    document.addEventListener('WeixinJSBridgeReady', ()=>{
+    // 微信内核就绪事件（必须有）
+    document.addEventListener('WeixinJSBridgeReady', function() {
         bgm.load();
+        // 微信内核就绪后立即尝试播放
+        bgm.play().catch(()=>{});
     }, false);
 
+    // 🔴 关键：全页面任何触摸都触发播放
+    document.addEventListener('touchstart', function() {
+        if(bgm.paused && localStorage.getItem('bgmPlaying') !== 'false'){
+            bgm.play().catch(()=>{});
+            bgmToggle.textContent = '🔊';
+            localStorage.setItem('bgmPlaying', 'true');
+        }
+    }, {passive: true});
+
+    // 🔴 关键：任何点击都触发播放
+    document.addEventListener('click', function() {
+        if(bgm.paused && localStorage.getItem('bgmPlaying') !== 'false'){
+            bgm.play().catch(()=>{});
+            bgmToggle.textContent = '🔊';
+            localStorage.setItem('bgmPlaying', 'true');
+        }
+    });
+
     // BGM开关
-    bgmToggle.onclick = ()=>{
+    bgmToggle.onclick = function(e) {
+        e.stopPropagation(); // 阻止冒泡触发上面的播放
         if(bgm.paused){
             bgm.play().catch(()=>{});
             bgmToggle.textContent = '🔊';
@@ -154,7 +178,7 @@
         }
     };
 
-    // 滑块验证成功【用户交互瞬间】强制播放BGM（微信唯一允许的时机）
+    // 滑块验证成功强制播放
     function verifySuccess() {
         bgm.play().catch(()=>{});
         localStorage.setItem('verifyTime', Date.now());
@@ -169,7 +193,11 @@
     const loading = document.getElementById('loading');
     let isMove = false, startX = 0;
 
-    block.addEventListener('touchstart', e=>{isMove=true;startX=e.touches[0].clientX-block.getBoundingClientRect().left;e.preventDefault();});
+    block.addEventListener('touchstart', e=>{
+        isMove=true;
+        startX=e.touches[0].clientX-block.getBoundingClientRect().left;
+        e.preventDefault();
+    });
     document.addEventListener('touchmove', e=>{
         if(!isMove)return;e.preventDefault();
         const r=slider.getBoundingClientRect();
