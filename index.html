@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>我要倾诉</title>
+    <title>我要倾诉 | CHOOSE C 树洞</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
@@ -35,7 +35,7 @@
         h1 { text-align:center; color:var(--text-primary); margin-bottom:10px; }
         .subtitle { text-align:center; color:var(--text-secondary); margin-bottom:24px; }
         textarea {
-            width:100%; min-height:160px; padding:14px; border-radius:18px;
+            width:100%; min-height:180px; padding:14px; border-radius:18px;
             background:rgba(255,255,255,0.08); border:1px solid var(--border-color);
             color:var(--text-primary); font-size:15px; resize:none;
         }
@@ -43,8 +43,8 @@
         .category-title { color:var(--text-secondary); margin-bottom:10px; }
         .category-list { display:flex; gap:10px; flex-wrap:wrap; }
         .category-item {
-            padding:8px 16px; border:1px solid var(--border-color); border-radius:18px;
-            color:var(--text-primary); cursor:pointer;
+            padding:8px 12px; border:1px solid var(--border-color); border-radius:18px;
+            color:var(--text-primary); cursor:pointer; font-size:13px;
         }
         .category-item.active {
             background:rgba(201,168,137,0.6); color:#fff;
@@ -70,38 +70,39 @@
 <body>
 <div class="container">
     <h1>📮 我要倾诉</h1>
-    <p class="subtitle">匿名投稿，温柔倾听</p>
-    <textarea id="contentInput" maxlength="500" placeholder="写下你的心事..."></textarea>
+    <p class="subtitle">匿名投稿，温柔倾听，你的心事有人懂</p>
+    <textarea id="contentInput" maxlength="800" placeholder="写下你的心事，投入树洞..."></textarea>
 
     <div class="category-group">
         <div class="category-title">选择分类</div>
         <div class="category-list">
-            <div class="category-item active" data-cate="心情">心情</div>
-            <div class="category-item" data-cate="烦恼">烦恼</div>
-            <div class="category-item" data-cate="祝福">祝福</div>
-            <div class="category-item" data-cate="日常">日常</div>
-            <div class="category-item" data-cate="情感">情感</div>
+            <div class="category-item active" data-cate="生活日常类">1. 生活日常类</div>
+            <div class="category-item" data-cate="情感恋爱类">2. 情感恋爱类</div>
+            <div class="category-item" data-cate="职场/学业类">3. 职场/学业类</div>
+            <div class="category-item" data-cate="自我情绪类">4. 自我情绪类</div>
+            <div class="category-item" data-cate="兴趣与圈层类">5. 兴趣与圈层类</div>
+            <div class="category-item" data-cate="互动功能区">6. 互动功能区</div>
         </div>
     </div>
 
     <div class="public-toggle">
         <input type="checkbox" id="publicCheck" checked>
-        <label>公开到心事墙</label>
+        <label>匿名公开到心事墙</label>
     </div>
     <div class="public-toggle">
         <input type="checkbox" id="commentCheck" checked>
-        <label>开放评论</label>
+        <label>开放评论功能</label>
     </div>
 
-    <button id="submitBtn">提交投稿</button>
+    <button id="submitBtn">投入树洞</button>
 
     <div id="resultBox">
-        <p>✅ 投稿成功！你的暗号：</p>
+        <p>✅ 投稿成功！请保存你的专属暗号：</p>
         <div style="margin:10px 0;">
-            <span id="secretDisplay"></span>
-            <button class="copy-btn" onclick="copy()">复制</button>
+            <span id="secretDisplay" style="font-size:18px;font-weight:bold;"></span>
+            <button class="copy-btn" onclick="copySecret()">复制暗号</button>
         </div>
-        <p>⚠️ 请妥善保存</p>
+        <p>⚠️ 暗号仅显示一次，丢失无法找回，请妥善保存</p>
     </div>
 
     <p class="links"><a href="wall.html">← 返回心事墙</a></p>
@@ -110,75 +111,83 @@
 <audio id="bgmAudio" loop>
 <script src="js/supabase-client.js"></script>
 <script>
-    // 验证过期检查（仅检查，不包含滑块）
+    // 验证检查：未验证跳转到验证页
     const VERIFY_DAY = 24*60*60*1000;
     const verifyTime = localStorage.getItem('verifyTime');
-    
-    // 验证过期，跳转到首页
     if(!verifyTime || Date.now()-parseInt(verifyTime) > VERIFY_DAY){
-        location.href='wall.html';
+        location.href='verify.html';
     }
 
-    // 日夜模式设置
+    // 日夜模式
     function setTheme(){
         const h = new Date().getHours();
         document.body.dataset.theme = h>=6&&h<18 ? 'day' : 'night';
     }
     setTheme();
 
-    // BGM配置
+    // 分类专属BGM配置
     const bgmList = {
-        "心情":"https://assets.mixkit.co/sfx/preview/mixkit-dreamy-night-time-ambience-1170.mp3",
-        "烦恼":"https://assets.mixkit.co/sfx/preview/mixkit-sad-piano-melody-1169.mp3",
-        "祝福":"https://assets.mixkit.co/sfx/preview/mixkit-happy-bells-notification-937.mp3",
-        "日常":"https://assets.mixkit.co/sfx/preview/mixkit-relaxing-piano-ambience-1168.mp3",
-        "情感":"https://assets.mixkit.co/sfx/preview/mixkit-romantic-piano-ambience-1171.mp3"
+        "生活日常类":"https://assets.mixkit.co/sfx/preview/mixkit-relaxing-piano-ambience-1168.mp3",
+        "情感恋爱类":"https://assets.mixkit.co/sfx/preview/mixkit-romantic-piano-ambience-1171.mp3",
+        "职场/学业类":"https://assets.mixkit.co/sfx/preview/mixkit-calm-study-ambience-1172.mp3",
+        "自我情绪类":"https://assets.mixkit.co/sfx/preview/mixkit-sad-piano-melody-1169.mp3",
+        "兴趣与圈层类":"https://assets.mixkit.co/sfx/preview/mixkit-dreamy-night-time-ambience-1170.mp3",
+        "互动功能区":"https://assets.mixkit.co/sfx/preview/mixkit-happy-bells-notification-937.mp3"
     };
     const audio = document.getElementById('bgmAudio');
-    let cate = "心情";
+    let currentCate = "生活日常类";
 
     // 切换BGM
-    function changeBGM(c){
-        audio.src = bgmList[c];
+    function changeBGM(cate){
+        audio.src = bgmList[cate];
         audio.volume = 0.3;
-        audio.play().catch(()=>{}); // 验证已通过，直接播放
+        audio.play().catch(()=>{});
     }
 
     // 分类选择
-    document.querySelectorAll('.category-item').forEach(i=>{
-        i.onclick=()=>{
-            document.querySelectorAll('.category-item').forEach(x=>x.classList.remove('active'));
-            i.classList.add('active'); cate=i.dataset.cate; changeBGM(cate);
+    document.querySelectorAll('.category-item').forEach(item=>{
+        item.onclick=()=>{
+            document.querySelectorAll('.category-item').forEach(i=>i.classList.remove('active'));
+            item.classList.add('active');
+            currentCate = item.dataset.cate;
+            changeBGM(currentCate);
         }
     });
 
     // 提交投稿
-    async function submit(){
-        const c = contentInput.value.trim();
-        if(!c)return alert('请输入内容');
+    async function submitPost(){
+        const content = contentInput.value.trim();
+        if(!content) return alert('请输入你的心事内容');
 
+        // 生成8位随机暗号
         const secret = Math.random().toString(36).slice(2,10);
         await supabaseClient.from('posts').insert([{
-            content:c, tag:cate,
-            is_public:publicCheck.checked,
-            is_comment_open:commentCheck.checked,
-            secret_code:secret, like_count:0, replies:[]
+            content: content,
+            tag: currentCate,
+            is_public: publicCheck.checked,
+            is_comment_open: commentCheck.checked,
+            secret_code: secret,
+            like_count: 0,
+            replies: []
         }]);
 
+        // 显示结果
         resultBox.style.display='block';
         secretDisplay.innerText=secret;
         contentInput.value='';
     }
 
     // 复制暗号
-    function copy(){
-        navigator.clipboard.writeText(secretDisplay.innerText);
-        alert('复制成功');
+    function copySecret(){
+        navigator.clipboard.writeText(secretDisplay.innerText)
+            .then(()=>alert('暗号复制成功！'))
+            .catch(()=>alert('复制失败，请手动复制'));
     }
 
     // 事件绑定
-    submitBtn.onclick = submit;
-    changeBGM(cate); // 初始化BGM
+    submitBtn.onclick = submitPost;
+    // 初始化BGM
+    changeBGM(currentCate);
 </script>
 </body>
 </html>

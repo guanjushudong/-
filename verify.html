@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CHOOSE C 树洞</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        :root {
+            --bg-main: #38322d;
+            --text-primary: #fff8f0;
+            --text-secondary: #e6d9cc;
+            --border-color: rgba(255,240,225,0.22);
+        }
+        [data-theme="day"] {
+            --bg-main: #f8efe8;
+            --text-primary: #4a3c30;
+            --text-secondary: #6d5b4b;
+            --border-color: rgba(160,125,95,0.3);
+        }
+        body {
+            background: var(--bg-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.6s ease;
+            touch-action: none;
+        }
+        .verify-container {
+            text-align: center;
+            padding: 20px;
+            max-width: 360px;
+            width: 100%;
+        }
+        .verify-title {
+            font-size: 28px;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+        }
+        .verify-desc {
+            font-size: 16px;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+        .slider {
+            width: 100%;
+            height: 50px;
+            background: rgba(255,255,255,0.12);
+            border-radius: 25px;
+            position: relative;
+            overflow: hidden;
+            touch-action: none;
+        }
+        .slider-block {
+            width: 70px;
+            height: 50px;
+            background: rgba(201,168,137,0.7);
+            border-radius: 25px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 16px;
+            touch-action: none;
+        }
+        .slider-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            color: var(--text-secondary);
+            line-height: 50px;
+            font-size: 15px;
+        }
+        .loading {
+            display: none;
+            color: var(--text-primary);
+            font-size: 16px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="verify-container">
+        <div class="verify-title">💌 CHOOSE C 树洞</div>
+        <div class="verify-desc">
+            轻轻滑动滑块<br>
+            开启专属你的情绪避风港
+        </div>
+        <div class="slider" id="slider">
+            <div class="slider-text">温柔滑动进入～</div>
+            <div class="slider-block" id="sliderBlock">→</div>
+        </div>
+        <div class="loading" id="loading">正在进入...</div>
+    </div>
+
+<script src="js/supabase-client.js"></script>
+<script>
+    // 日夜模式自动切换
+    function setTheme() {
+        const h = new Date().getHours();
+        document.body.dataset.theme = h >=6 && h <18 ? 'day' : 'night';
+    }
+    setTheme();
+
+    // 已验证直接跳转到心事墙
+    const VERIFY_DAY = 24*60*60*1000;
+    const verifyTime = localStorage.getItem('verifyTime');
+    if(verifyTime && Date.now()-parseInt(verifyTime) < VERIFY_DAY){
+        location.href='wall.html';
+    }
+
+    // 滑块验证逻辑（PC+手机完美兼容）
+    const slider = document.getElementById('slider');
+    const block = document.getElementById('sliderBlock');
+    const loading = document.getElementById('loading');
+    let isMove = false, startX = 0;
+
+    block.addEventListener('pointerdown', e=>{
+        isMove=true; 
+        startX=e.clientX - block.getBoundingClientRect().left;
+        block.setPointerCapture(e.pointerId); 
+        e.preventDefault();
+    });
+
+    document.addEventListener('pointermove', e=>{
+        if(!isMove) return;
+        e.preventDefault();
+        
+        const sliderRect = slider.getBoundingClientRect();
+        let x = e.clientX - sliderRect.left - startX;
+        
+        if(x < 0) x = 0;
+        if(x > sliderRect.width - block.offsetWidth){
+            x = sliderRect.width - block.offsetWidth;
+            localStorage.setItem('verifyTime', Date.now());
+            slider.style.display='none';
+            loading.style.display='block';
+            setTimeout(()=>{ location.href='wall.html'; }, 500);
+            isMove = false;
+        }
+        block.style.left = x + 'px';
+    });
+
+    document.addEventListener('pointerup', e=>{
+        if(isMove){ 
+            block.releasePointerCapture(e.pointerId); 
+            isMove=false;
+            if(parseInt(block.style.left) < slider.offsetWidth - block.offsetWidth -10){
+                block.style.left='0px';
+            }
+        }
+    });
+
+    // 移动端触摸事件
+    block.addEventListener('touchstart', e=>{
+        isMove=true; 
+        startX=e.touches[0].clientX - block.getBoundingClientRect().left;
+        e.preventDefault();
+    });
+
+    document.addEventListener('touchmove', e=>{
+        if(!isMove) return;
+        e.preventDefault();
+        
+        const sliderRect = slider.getBoundingClientRect();
+        let x = e.touches[0].clientX - sliderRect.left - startX;
+        
+        if(x < 0) x = 0;
+        if(x > sliderRect.width - block.offsetWidth){
+            x = sliderRect.width - block.offsetWidth;
+            localStorage.setItem('verifyTime', Date.now());
+            slider.style.display='none';
+            loading.style.display='block';
+            setTimeout(()=>{ location.href='wall.html'; }, 500);
+            isMove = false;
+        }
+        block.style.left = x + 'px';
+    });
+
+    document.addEventListener('touchend', ()=>{
+        if(isMove){ 
+            isMove=false;
+            if(parseInt(block.style.left) < slider.offsetWidth - block.offsetWidth -10){
+                block.style.left='0px';
+            }
+        }
+    });
+</script>
+</body>
+</html>

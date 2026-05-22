@@ -81,15 +81,15 @@
             flex-wrap: wrap;
         }
         .filter-btn {
-            padding: 8px 14px;
+            padding: 8px 12px;
             border-radius: 18px;
             border: 1px solid var(--border-color);
             background: transparent;
             color: var(--text-primary);
             cursor: pointer;
-            font-size: 14px;
+            font-size: 13px;
             flex: 1;
-            min-width: 70px;
+            min-width: 85px;
             text-align: center;
         }
         .filter-btn.active {
@@ -172,58 +172,6 @@
             color: var(--text-primary);
             line-height: 1.6;
         }
-        .verify-box {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: var(--bg-main);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            gap: 16px;
-            touch-action: none;
-        }
-        .verify-title {
-            font-size: 22px;
-            color: var(--text-primary);
-        }
-        .verify-desc {
-            font-size: 15px;
-            color: var(--text-secondary);
-            text-align: center;
-        }
-        .slider {
-            width: 100%;
-            max-width: 320px;
-            height: 44px;
-            background: rgba(255,255,255,0.12);
-            border-radius: 22px;
-            position: relative;
-            overflow: hidden;
-            touch-action: none;
-        }
-        .slider-block {
-            width: 64px; height: 44px;
-            background: rgba(201,168,137,0.7);
-            border-radius: 22px;
-            position: absolute; left: 0; top: 0;
-            cursor: grab;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            touch-action: none;
-        }
-        .slider-text {
-            position: absolute;
-            width: 100%;
-            text-align: center;
-            color: var(--text-secondary);
-            line-height: 44px;
-        }
-        .main-box { display: none; }
         .links {
             text-align: center;
             margin-top: 30px;
@@ -237,30 +185,20 @@
 </head>
 <body>
     <div class="notice-bar">
-        <div class="notice-text">
-            【树洞简介】这里是专属情绪避风港，匿名倾诉，温柔倾听
-        </div>
+        <div class="notice-text">【CHOOSE C 树洞】专属情绪避风港 | 匿名倾诉 | 温柔倾听 | 守护你的所有心事</div>
     </div>
 
-    <div class="verify-box" id="verifyBox">
-        <div class="verify-title">💌 欢迎来到彩虹树洞</div>
-        <div class="verify-desc">滑动滑块，开启你的情绪空间</div>
-        <div class="slider">
-            <div class="slider-text">温柔滑动进入～</div>
-            <div class="slider-block">→</div>
-        </div>
-    </div>
-
-    <div class="main-box container" id="mainBox">
-        <h1 style="color:var(--text-primary);text-align:center;">📜 CHOOSE C 心事墙</h1>
+    <div class="container">
+        <h1 style="color:var(--text-primary);text-align:center;margin-bottom:10px;">📜 CHOOSE C 心事墙</h1>
         <button class="publish-btn" onclick="location.href='index.html'">💌 我要倾诉</button>
         <div class="filter-tag">
             <button class="filter-btn active" data-tag="all">全部</button>
-            <button class="filter-btn" data-tag="心情">心情</button>
-            <button class="filter-btn" data-tag="烦恼">烦恼</button>
-            <button class="filter-btn" data-tag="祝福">祝福</button>
-            <button class="filter-btn" data-tag="日常">日常</button>
-            <button class="filter-btn" data-tag="情感">情感</button>
+            <button class="filter-btn" data-tag="生活日常类">生活日常</button>
+            <button class="filter-btn" data-tag="情感恋爱类">情感恋爱</button>
+            <button class="filter-btn" data-tag="职场/学业类">职场学业</button>
+            <button class="filter-btn" data-tag="自我情绪类">自我情绪</button>
+            <button class="filter-btn" data-tag="兴趣与圈层类">兴趣圈层</button>
+            <button class="filter-btn" data-tag="互动功能区">互动专区</button>
         </div>
         <div id="postList"></div>
         <p class="links"><a href="lookup.html">🔍 查回复/删帖</a></p>
@@ -272,119 +210,30 @@
 
 <script src="js/supabase-client.js"></script>
 <script>
-    // 日夜模式设置
-    function setDayNightTheme() {
-        const h = new Date().getHours();
-        const isDay = h >=6 && h <18;
-        document.body.dataset.theme = isDay ? 'day' : 'night';
-    }
-    setDayNightTheme();
-    setInterval(setDayNightTheme, 60000);
-
-    // 验证常量
+    // 验证检查：未验证跳转到验证页
     const VERIFY_DAY = 24*60*60*1000;
-    let verifyPass = false;
+    const verifyTime = localStorage.getItem('verifyTime');
+    if(!verifyTime || Date.now()-parseInt(verifyTime) > VERIFY_DAY){
+        location.href='verify.html';
+    }
 
-    // BGM播放函数
+    // 日夜模式
+    function setTheme() {
+        const h = new Date().getHours();
+        document.body.dataset.theme = h >=6 && h <18 ? 'day' : 'night';
+    }
+    setTheme();
+    setInterval(setTheme, 60000);
+
+    // 自动播放BGM
     function playBGM(){
         const a = document.getElementById('bgm');
         a.volume = 0.3;
         a.play().catch(()=>{});
     }
+    playBGM();
 
-    // 检查验证状态
-    function checkVerify(){
-        const t = localStorage.getItem('verifyTime');
-        return t && Date.now()-t < VERIFY_DAY;
-    }
-
-    // 滑块验证逻辑（PC+手机适配）
-    const slider = document.querySelector('.slider');
-    const block = document.querySelector('.slider-block');
-    let isMove = false, startX = 0;
-
-    block.addEventListener('pointerdown', e=>{
-        isMove=true; 
-        startX=e.clientX - block.getBoundingClientRect().left;
-        block.setPointerCapture(e.pointerId); 
-        e.preventDefault();
-    });
-
-    document.addEventListener('pointermove', e=>{
-        if(!isMove) return;
-        e.preventDefault();
-        
-        const sliderRect = slider.getBoundingClientRect();
-        let x = e.clientX - sliderRect.left - startX;
-        
-        // 限制滑块范围
-        if(x < 0) x = 0;
-        if(x > sliderRect.width - block.offsetWidth){
-            x = sliderRect.width - block.offsetWidth;
-            verifyPass = true;
-            localStorage.setItem('verifyTime', Date.now());
-            verifyBox.style.display='none'; 
-            mainBox.style.display='block';
-            playBGM(); 
-            loadPosts();
-            isMove = false;
-        }
-        block.style.left = x + 'px';
-    });
-
-    document.addEventListener('pointerup', e=>{
-        if(isMove){ 
-            block.releasePointerCapture(e.pointerId); 
-            isMove=false;
-            // 未通过验证，滑块归位
-            if(!verifyPass) block.style.left='0px';
-        }
-    });
-
-    // 移动端触摸事件
-    block.addEventListener('touchstart', e=>{
-        isMove=true; 
-        startX=e.touches[0].clientX - block.getBoundingClientRect().left;
-        e.preventDefault();
-    });
-
-    document.addEventListener('touchmove', e=>{
-        if(!isMove) return;
-        e.preventDefault();
-        
-        const sliderRect = slider.getBoundingClientRect();
-        let x = e.touches[0].clientX - sliderRect.left - startX;
-        
-        if(x < 0) x = 0;
-        if(x > sliderRect.width - block.offsetWidth){
-            x = sliderRect.width - block.offsetWidth;
-            verifyPass = true;
-            localStorage.setItem('verifyTime', Date.now());
-            verifyBox.style.display='none'; 
-            mainBox.style.display='block';
-            playBGM(); 
-            loadPosts();
-            isMove = false;
-        }
-        block.style.left = x + 'px';
-    });
-
-    document.addEventListener('touchend', ()=>{
-        if(isMove){ 
-            isMove=false;
-            if(!verifyPass) block.style.left='0px';
-        }
-    });
-
-    // 初始验证检查
-    if(checkVerify()){
-        verifyPass = true;
-        verifyBox.style.display='none'; 
-        mainBox.style.display='block';
-        loadPosts();
-    }
-
-    // 点赞功能
+    // 微信式点赞功能（本地记录点赞状态）
     const LIKE_KEY = "likeList";
     function getLikes(){ return JSON.parse(localStorage.getItem(LIKE_KEY)||"[]"); }
     function saveLikes(l){ localStorage.setItem(LIKE_KEY, JSON.stringify(l)); }
@@ -394,16 +243,16 @@
         let q = supabaseClient.from('posts').select('*').eq('is_public',true).order('created_at',{ascending:false});
         if(currentTag!=='all') q = q.eq('tag', currentTag);
         const {data} = await q;
-        const my = getLikes();
+        const myLikes = getLikes();
         postList.innerHTML = data.map(p=>{
-            const rep = Array.isArray(p.replies)?p.replies:[];
-            const liked = my.includes(p.id);
+            const replies = Array.isArray(p.replies)?p.replies:[];
+            const isLiked = myLikes.includes(p.id);
             return `
             <div class="post-card">
                 <div class="post-card-top">
                     <span class="post-tag">【${p.tag}】</span>
                     <div class="like-wrap">
-                        <button class="like-btn ${liked?'yes':'no'}" onclick="like(${p.id},${p.like_count},${liked})">${liked?'❤️':'🤍'}</button>
+                        <button class="like-btn ${isLiked?'yes':'no'}" onclick="toggleLike(${p.id},${p.like_count},${isLiked})">${isLiked?'❤️':'🤍'}</button>
                         <span class="like-num">${p.like_count}</span>
                     </div>
                 </div>
@@ -412,44 +261,58 @@
                 ${p.is_comment_open?`
                 <div class="comment-area">
                     <div class="comment-input-wrap">
-                        <input class="comment-input" id="c${p.id}" placeholder="评论...">
-                        <button class="comment-send" onclick="send(${p.id})">发送</button>
+                        <input class="comment-input" id="c${p.id}" placeholder="写下你的评论...">
+                        <button class="comment-send" onclick="sendComment(${p.id})">发送</button>
                     </div>
-                    <div>${rep.map(r=>`<div class="comment-item">${r.content||r}</div>`).join('') || '<div class="comment-item" style=color:var(--text-secondary)>暂无评论</div>'}</div>
-                </div>`:'<div style=color:var(--text-secondary)>评论已关闭</div>'}
+                    <div class="comment-list">
+                        ${replies.map(r=>`<div class="comment-item">${r.content||r}</div>`).join('') || '<div class="comment-item" style="color:var(--text-secondary)">暂无评论，快来抢沙发～</div>'}
+                    </div>
+                </div>`:'<div style="color:var(--text-secondary);font-size:14px;">💬 评论已关闭</div>'}
             </div>`;
         }).join('');
     }
 
-    async function like(id,num,is){
-        let l = getLikes();
-        if(is){
-            l = l.filter(i=>i!==id);
-            await supabaseClient.from('posts').update({like_count:num-1}).eq('id',id);
+    // 点赞/取消点赞
+    async function toggleLike(id, count, isLiked){
+        let likes = getLikes();
+        if(isLiked){
+            likes = likes.filter(i=>i!==id);
+            await supabaseClient.from('posts').update({like_count: count-1}).eq('id', id);
         }else{
-            l.push(id);
-            await supabaseClient.from('posts').update({like_count:num+1}).eq('id',id);
+            likes.push(id);
+            await supabaseClient.from('posts').update({like_count: count+1}).eq('id', id);
         }
-        saveLikes(l); loadPosts();
+        saveLikes(likes);
+        loadPosts();
     }
 
-    async function send(id){
-        const i = document.getElementById('c'+id);
-        const c = i.value.trim();
-        if(!c)return;
-        const {data} = await supabaseClient.from('posts').select('replies').eq('id',id).single();
-        const arr = Array.isArray(data.replies) ? [...data.replies] : [];
-        arr.push({content:c});
-        await supabaseClient.from('posts').update({replies:arr}).eq('id',id);
-        i.value=''; loadPosts();
+    // 发送评论
+    async function sendComment(id){
+        const input = document.getElementById(`c${id}`);
+        const content = input.value.trim();
+        if(!content) return alert('请输入评论内容');
+        
+        const {data} = await supabaseClient.from('posts').select('replies').eq('id', id).single();
+        const newReplies = Array.isArray(data.replies) ? [...data.replies] : [];
+        newReplies.push({content});
+        
+        await supabaseClient.from('posts').update({replies: newReplies}).eq('id', id);
+        input.value = '';
+        loadPosts();
     }
 
-    document.querySelectorAll('.filter-btn').forEach(b=>{
-        b.onclick=()=>{
+    // 分类筛选
+    document.querySelectorAll('.filter-btn').forEach(btn=>{
+        btn.onclick=()=>{
             document.querySelectorAll('.filter-btn').forEach(i=>i.classList.remove('active'));
-            b.classList.add('active'); currentTag=b.dataset.tag; loadPosts();
+            btn.classList.add('active');
+            currentTag = btn.dataset.tag;
+            loadPosts();
         }
     });
+
+    // 加载帖子
+    loadPosts();
 </script>
 </body>
 </html>
