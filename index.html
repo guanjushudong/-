@@ -107,13 +107,18 @@
         <div class="loading" id="loading">正在进入...</div>
     </div>
 
+<!-- 全局BGM音频（所有页面共用） -->
+<audio id="globalBGM" loop preload="auto">
+    <source src="https://assets.mixkit.co/sfx/preview/mixkit-relaxing-piano-ambience-1168.mp3" type="audio/mpeg">
+
+
 <script src="js/supabase-client.js"></script>
 <script>
-    // 强制清除所有旧的验证记录（解决残留问题）
-    localStorage.removeItem('verifyTime');
-    localStorage.removeItem('likeList');
+    // 强制清除所有旧数据
+    localStorage.clear();
+    sessionStorage.clear();
 
-    // 日夜模式自动切换
+    // 日夜模式
     function setTheme() {
         const h = new Date().getHours();
         document.body.dataset.theme = h >=6 && h <18 ? 'day' : 'night';
@@ -127,11 +132,36 @@
         location.href='wall.html';
     }
 
-    // 滑块验证逻辑（PC+手机完美兼容）
+    // 🔴 微信专属BGM兼容
+    const bgm = document.getElementById('globalBGM');
+    bgm.volume = 0.3;
+
+    // 微信内核就绪事件
+    document.addEventListener('WeixinJSBridgeReady', () => {
+        bgm.load(); // 预加载音频
+    }, false);
+
+    // 滑块验证逻辑（BGM播放直接绑定到用户交互）
     const slider = document.getElementById('slider');
     const block = document.getElementById('sliderBlock');
     const loading = document.getElementById('loading');
     let isMove = false, startX = 0;
+
+    function verifySuccess() {
+        // ✅ 关键：在用户交互回调内立即播放BGM（无任何延迟）
+        bgm.play().catch(err => {
+            console.log('自动播放被拦截，请点击右上角开关手动开启');
+        });
+        
+        localStorage.setItem('verifyTime', Date.now());
+        localStorage.setItem('bgmPlaying', 'true');
+        
+        slider.style.display='none';
+        loading.style.display='block';
+        
+        // 立即跳转（移除setTimeout）
+        location.href='wall.html';
+    }
 
     block.addEventListener('pointerdown', e=>{
         isMove=true; 
@@ -149,11 +179,7 @@
         
         if(x < 0) x = 0;
         if(x > sliderRect.width - block.offsetWidth){
-            x = sliderRect.width - block.offsetWidth;
-            localStorage.setItem('verifyTime', Date.now());
-            slider.style.display='none';
-            loading.style.display='block';
-            setTimeout(()=>{ location.href='wall.html'; }, 500);
+            verifySuccess();
             isMove = false;
         }
         block.style.left = x + 'px';
@@ -185,11 +211,7 @@
         
         if(x < 0) x = 0;
         if(x > sliderRect.width - block.offsetWidth){
-            x = sliderRect.width - block.offsetWidth;
-            localStorage.setItem('verifyTime', Date.now());
-            slider.style.display='none';
-            loading.style.display='block';
-            setTimeout(()=>{ location.href='wall.html'; }, 500);
+            verifySuccess();
             isMove = false;
         }
         block.style.left = x + 'px';
