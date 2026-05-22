@@ -53,6 +53,11 @@
         <input type="checkbox" id="commentCheck" checked>
         <label>开放评论功能</label>
     </div>
+    <!-- 找回：允许摘取官方公众号 -->
+    <div class="public-toggle">
+        <input type="checkbox" id="allowPublishCheck">
+        <label>允许CHOOS C摘取到官方公众号</label>
+    </div>
     <button id="submitBtn">投入树洞</button>
     <div id="resultBox">
         <p>✅ 投稿成功！请保存你的专属暗号：</p>
@@ -62,9 +67,6 @@
     <p class="links"><a href="wall.html">← 返回心事墙</a></p>
 </div>
 
-<audio id="globalBGM" loop preload="auto">
-    <source src="https://assets.mixkit.co/sfx/preview/mixkit-relaxing-piano-ambience-1168.mp3" type="audio/mpeg">
-
 <script src="js/supabase-client.js"></script>
 <script>
     const VERIFY_DAY=24*60*60*1000;
@@ -72,11 +74,20 @@
     if(!verifyTime||Date.now()-parseInt(verifyTime)>VERIFY_DAY){location.href='index.html';}
     function setTheme(){const h=new Date().getHours();document.body.dataset.theme=h>=6&&h<18?'day':'night';}setTheme();
 
-    const bgm=document.getElementById('globalBGM');
+    // ========== 独立BGM ==========
+    let bgm = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-relaxing-piano-ambience-1168.mp3");
+    bgm.loop = true;
+    bgm.volume = 0.3;
     const bgmToggle=document.getElementById('bgmToggle');
-    bgm.volume=0.3;
-    if(localStorage.getItem('bgmPlaying')==='true'){bgm.play().catch(()=>{bgmToggle.textContent='🔇';localStorage.setItem('bgmPlaying','false');});}else{bgmToggle.textContent='🔇';}
-    bgmToggle.onclick=()=>{if(bgm.paused){bgm.play();bgmToggle.textContent='🔊';localStorage.setItem('bgmPlaying','true');}else{bgm.pause();bgmToggle.textContent='🔇';localStorage.setItem('bgmPlaying','false');}};
+
+    if(localStorage.getItem('bgmPlaying')==='true'){
+        bgm.play().catch(()=>{bgmToggle.textContent='🔇';localStorage.setItem('bgmPlaying','false');});
+    }else{bgmToggle.textContent='🔇';}
+
+    bgmToggle.onclick=()=>{
+        if(bgm.paused){bgm.play();bgmToggle.textContent='🔊';localStorage.setItem('bgmPlaying','true');}
+        else{bgm.pause();bgmToggle.textContent='🔇';localStorage.setItem('bgmPlaying','false');}
+    };
 
     const bgmList={
         "生活日常类":"https://assets.mixkit.co/sfx/preview/mixkit-relaxing-piano-ambience-1168.mp3",
@@ -87,14 +98,21 @@
         "互动功能区":"https://assets.mixkit.co/sfx/preview/mixkit-happy-bells-notification-937.mp3"
     };
     let currentCate="生活日常类";
-    function changeBGM(cate){bgm.src=bgmList[cate];bgm.volume=0.3;if(localStorage.getItem('bgmPlaying')==='true')bgm.play().catch(()=>{});}
+    function changeBGM(cate){
+        bgm.src=bgmList[cate];
+        bgm.volume=0.3;
+        if(localStorage.getItem('bgmPlaying')==='true')bgm.play().catch(()=>{});
+    }
     document.querySelectorAll('.category-item').forEach(item=>{
         item.onclick=()=>{document.querySelectorAll('.category-item').forEach(i=>i.classList.remove('active'));item.classList.add('active');currentCate=item.dataset.cate;changeBGM(currentCate);}
     });
     async function submitPost(){
         const content=contentInput.value.trim();if(!content)return alert('请输入你的心事');
         const secret=Math.random().toString(36).slice(2,10);
-        await supabaseClient.from('posts').insert([{content,tag:currentCate,is_public:publicCheck.checked,is_comment_open:commentCheck.checked,secret_code:secret,like_count:0,replies:[]}]);
+        await supabaseClient.from('posts').insert([{
+            content,tag:currentCate,is_public:publicCheck.checked,
+            allow_publish:allowPublishCheck.checked,secret_code:secret,like_count:0,reply:null
+        }]);
         resultBox.style.display='block';secretDisplay.innerText=secret;contentInput.value='';
     }
     function copySecret(){navigator.clipboard.writeText(secretDisplay.innerText).then(()=>alert('复制成功'));}

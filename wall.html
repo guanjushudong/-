@@ -64,11 +64,8 @@
         .post-content {font-size:15px;line-height:1.7;color:var(--text-primary);margin-bottom:10px;}
         .post-time {font-size:12px;color:var(--text-secondary);margin-bottom:14px;}
         .comment-area {border-top:1px solid var(--border-color);padding-top:12px;margin-top:10px;}
-        .comment-input-wrap {display:flex;gap:8px;margin-bottom:10px;}
-        .comment-input {flex:1;padding:8px 12px;border-radius:16px;background:rgba(255,255,255,0.08);border:1px solid var(--border-color);color:var(--text-primary);font-size:14px;}
-        .comment-send {padding:8px 14px;border-radius:16px;border:none;background:rgba(201,168,137,0.5);color:#fff;cursor:pointer;}
-        .comment-item {font-size:14px;color:var(--text-primary);line-height:1.6;margin:6px 0;}
         .comment-close-tip {font-size:13px;color:var(--text-secondary);margin-bottom:8px;}
+        .comment-item {font-size:14px;color:var(--text-primary);line-height:1.6;margin:6px 0;}
         .links {text-align:center;margin-top:30px;font-size:14px;}
         .links a {color:var(--text-secondary);text-decoration:none;}
     </style>
@@ -94,9 +91,6 @@
         <p class="links"><a href="lookup.html">🔍 查回复/删帖</a></p>
     </div>
 
-<audio id="globalBGM" loop preload="auto">
-    <source src="https://assets.mixkit.co/sfx/preview/mixkit-relaxing-piano-ambience-1168.mp3" type="audio/mpeg">
-
 <script src="js/supabase-client.js"></script>
 <script>
     const VERIFY_DAY = 24*60*60*1000;
@@ -106,11 +100,20 @@
     function setTheme(){const h=new Date().getHours();document.body.dataset.theme=h>=6&&h<18?'day':'night';}
     setTheme();setInterval(setTheme,60000);
 
-    const bgm=document.getElementById('globalBGM');
-    const bgmToggle=document.getElementById('bgmToggle');
-    bgm.volume=0.3;
-    if(localStorage.getItem('bgmPlaying')==='true'){bgm.play().catch(()=>{bgmToggle.textContent='🔇';localStorage.setItem('bgmPlaying','false');});}else{bgmToggle.textContent='🔇';}
-    bgmToggle.onclick=()=>{if(bgm.paused){bgm.play();bgmToggle.textContent='🔊';localStorage.setItem('bgmPlaying','true');}else{bgm.pause();bgmToggle.textContent='🔇';localStorage.setItem('bgmPlaying','false');}};
+    // ========== 独立BGM，微信兼容 ==========
+    let bgm = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-relaxing-piano-ambience-1168.mp3");
+    bgm.loop = true;
+    bgm.volume = 0.3;
+    const bgmToggle = document.getElementById('bgmToggle');
+
+    if(localStorage.getItem('bgmPlaying')==='true'){
+        bgm.play().catch(()=>{bgmToggle.textContent='🔇';localStorage.setItem('bgmPlaying','false');});
+    }else{bgmToggle.textContent='🔇';}
+
+    bgmToggle.onclick=()=>{
+        if(bgm.paused){bgm.play();bgmToggle.textContent='🔊';localStorage.setItem('bgmPlaying','true');}
+        else{bgm.pause();bgmToggle.textContent='🔇';localStorage.setItem('bgmPlaying','false');}
+    };
 
     const LIKE_KEY="likeList";
     function getLikes(){return JSON.parse(localStorage.getItem(LIKE_KEY)||"[]");}
@@ -123,29 +126,27 @@
         const {data}=await q;
         const myLikes=getLikes();
         postList.innerHTML=data.map(p=>{
-            const replies=Array.isArray(p.replies)?p.replies:[];
             const isLiked=myLikes.includes(p.id);
-            // ========== 修复点 ==========
-            // 关闭评论：隐藏输入框，只显示历史评论；开启评论：正常显示输入+发送
+            // 读取数据库真实字段：reply=评论，allow_publish=开关
             return `
             <div class="post-card">
                 <div class="post-card-top">
                     <span class="post-tag">【${p.tag}】</span>
                     <div class="like-wrap">
-                        <button class="like-btn ${isLiked?'yes':'no'}" onclick="toggleLike(${p.id},${p.like_count},${isLiked})">${isLiked?'❤️':'🤍'}</button>
-                        <span class="like-num">${p.like_count}</span>
+                        <button class="like-btn ${isLiked?'yes':'no'}" onclick="toggleLike(${p.id},${p.like_count||0},${isLiked})">${isLiked?'❤️':'🤍'}</button>
+                        <span class="like-num">${p.like_count||0}</span>
                     </div>
                 </div>
                 <div class="post-content">${p.content}</div>
                 <div class="post-time">${new Date(p.created_at).toLocaleString()}</div>
                 <div class="comment-area">
-                    ${p.is_comment_open?`
+                    ${p.allow_publish ? `
                     <div class="comment-input-wrap">
                         <input class="comment-input" id="c${p.id}" placeholder="写下你的评论...">
                         <button class="comment-send" onclick="sendComment(${p.id})">发送</button>
-                    </div>`:`<div class="comment-close-tip">💬 评论已关闭（仅可查看历史）</div>`}
+                    </div>`:`<div class="comment-close-tip">💬 评论已关闭（仅查看历史回复）</div>`}
                     <div class="comment-list">
-                        ${replies.map(r=>`<div class="comment-item">${r.content||r}</div>`).join('')||'<div class="comment-item" style="color:var(--text-secondary)">暂无评论</div>'}
+                        ${p.reply ? `<div class="comment-item">${p.reply}</div>` : '<div class="comment-item" style="color:var(--text-secondary)">暂无回复</div>'}
                     </div>
                 </div>
             </div>`;
@@ -159,16 +160,8 @@
         saveLikes(likes);loadPosts();
     }
 
-    async function sendComment(id){
-        const input=document.getElementById(`c${id}`);
-        const content=input.value.trim();
-        if(!content)return alert('请输入评论');
-        const {data}=await supabaseClient.from('posts').select('replies').eq('id',id).single();
-        const newReplies=Array.isArray(data.replies)?[...data.replies]:[];
-        newReplies.push({content});
-        await supabaseClient.from('posts').update({replies:newReplies}).eq('id',id);
-        input.value='';loadPosts();
-    }
+    // 禁用新增评论
+    async function sendComment(id){alert("评论功能已关闭，无法新增");}
 
     document.querySelectorAll('.filter-btn').forEach(btn=>{
         btn.onclick=()=>{
