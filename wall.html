@@ -190,7 +190,7 @@
 
     <div class="container">
         <h1 style="color:var(--text-primary);text-align:center;margin-bottom:10px;">📜 CHOOSE C 心事墙</h1>
-        <button class="publish-btn" onclick="location.href='index.html'">💌 我要倾诉</button>
+        <button class="publish-btn" onclick="location.href='post.html'">💌 我要倾诉</button>
         <div class="filter-tag">
             <button class="filter-btn active" data-tag="all">全部</button>
             <button class="filter-btn" data-tag="生活日常类">生活日常</button>
@@ -214,7 +214,7 @@
     const VERIFY_DAY = 24*60*60*1000;
     const verifyTime = localStorage.getItem('verifyTime');
     if(!verifyTime || Date.now()-parseInt(verifyTime) > VERIFY_DAY){
-        location.href='verify.html';
+        location.href='index.html';
     }
 
     // 日夜模式

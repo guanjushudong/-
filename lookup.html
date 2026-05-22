@@ -66,7 +66,7 @@
     const VERIFY_DAY = 24*60*60*1000;
     const verifyTime = localStorage.getItem('verifyTime');
     if(!verifyTime || Date.now()-parseInt(verifyTime) > VERIFY_DAY){
-        location.href='verify.html';
+        location.href='index.html';
     }
 
     // 日夜模式
