@@ -20,12 +20,14 @@
             --btn-primary: rgba(201,168,137,0.7);
             --btn-danger: #ff4d4f;
             --btn-success: #52c41a;
+            --official-reply-bg: rgba(201,168,137,0.15);
         }
         [data-theme="day"] {
             --bg-main: #f8efe8;
             --text-primary: #4a3c30;
             --text-secondary: #6d5b4b;
             --border-color: rgba(160,125,95,0.3);
+            --official-reply-bg: rgba(201,168,137,0.2);
         }
         body {
             background: var(--bg-main);
@@ -119,11 +121,40 @@
             margin-bottom: 10px;
         }
         .post-reply {
-            background: rgba(255,255,255,0.08);
+            background: var(--official-reply-bg);
             padding: 10px;
             border-radius: 12px;
             margin-bottom: 12px;
             font-size: 14px;
+        }
+        .comment-list {
+            margin: 12px 0;
+            padding-left: 10px;
+            border-left: 2px solid var(--border-color);
+        }
+        .comment-item {
+            font-size: 14px;
+            line-height: 1.5;
+            margin: 8px 0;
+            padding: 8px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        .comment-time {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+        .del-comment-btn {
+            width: auto;
+            padding: 4px 8px;
+            font-size: 12px;
+            background: var(--btn-danger);
+            border-radius: 8px;
+            margin-left: 10px;
         }
         .btn-group {
             display: flex;
@@ -164,7 +195,7 @@
 <script src="js/supabase-client.js"></script>
 <script>
     // 管理员密码（请修改为你自己的密码）
-    const ADMIN_PASSWORD = "Gj666888";
+    const ADMIN_PASSWORD = "choosec123";
 
     function setTheme(){const h=new Date().getHours();document.body.dataset.theme=h>=6&&h<18?'day':'night';}
     setTheme();
@@ -192,19 +223,26 @@
         loadAllPosts();
     }
 
-    // 加载所有帖子
+    // 加载所有帖子和评论
     async function loadAllPosts(){
-        const {data, error} = await supabaseClient
+        const {data:posts, error:postError} = await supabaseClient
             .from('posts')
             .select('*')
             .order('created_at', {ascending: false});
         
-        if(error){
-            alert('加载失败：' + error.message);
+        if(postError){
+            alert('加载失败：' + postError.message);
             return;
         }
 
-        postList.innerHTML = data.map(p=>{
+        // 加载所有评论
+        const {data:allComments} = await supabaseClient
+            .from('comments')
+            .select('*')
+            .order('created_at',{ascending:true});
+
+        postList.innerHTML = posts.map(p=>{
+            const postComments=allComments.filter(c=>c.post_id===p.id);
             return `
             <div class="post-card">
                 <div class="post-header">
@@ -215,7 +253,22 @@
                 </div>
                 <div class="post-content">${p.content}</div>
                 <div class="post-time">${new Date(p.created_at).toLocaleString()}</div>
-                ${p.reply ? `<div class="post-reply">官方回复：${p.reply}</div>` : ''}
+                ${p.reply ? `<div class="post-reply"><b>官方回复：</b>${p.reply}</div>` : ''}
+                
+                ${postComments.length>0 ? `
+                <div class="comment-list">
+                    <div style="margin-bottom:8px;color:var(--text-secondary);">用户评论 (${postComments.length})：</div>
+                    ${postComments.map(c=>`
+                        <div class="comment-item">
+                            <div>
+                                ${c.content}
+                                <div class="comment-time">${new Date(c.created_at).toLocaleString()}</div>
+                            </div>
+                            <button class="del-comment-btn" onclick="deleteComment(${c.id})">删除</button>
+                        </div>
+                    `).join('')}
+                </div>` : ''}
+                
                 <div class="btn-group">
                     <button class="${p.allow_publish ? 'btn-danger' : 'btn-success'}" 
                             onclick="toggleComment(${p.id}, ${p.allow_publish})">
@@ -243,10 +296,26 @@
 
     // 删除帖子
     async function deletePost(id){
-        if(!confirm('确定要删除这条帖子吗？此操作不可恢复！'))return;
+        if(!confirm('确定要删除这条帖子吗？所有评论也会被一起删除！此操作不可恢复！'))return;
         
         const {error} = await supabaseClient
             .from('posts')
+            .delete()
+            .eq('id', id);
+        
+        if(error){
+            alert('删除失败：' + error.message);
+            return;
+        }
+        loadAllPosts();
+    }
+
+    // 删除评论
+    async function deleteComment(id){
+        if(!confirm('确定要删除这条评论吗？'))return;
+        
+        const {error} = await supabaseClient
+            .from('comments')
             .delete()
             .eq('id', id);
         
