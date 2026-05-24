@@ -20,14 +20,14 @@
             --btn-primary: rgba(201,168,137,0.7);
             --btn-danger: #ff4d4f;
             --btn-success: #52c41a;
-            --official-reply-bg: rgba(201,168,137,0.15);
+            --official-bg: rgba(201,168,137,0.15);
         }
         [data-theme="day"] {
             --bg-main: #f8efe8;
             --text-primary: #4a3c30;
             --text-secondary: #6d5b4b;
             --border-color: rgba(160,125,95,0.3);
-            --official-reply-bg: rgba(201,168,137,0.2);
+            --official-bg: rgba(201,168,137,0.2);
         }
         body {
             background: var(--bg-main);
@@ -51,7 +51,7 @@
             max-width: 400px;
             margin: 100px auto;
         }
-        input {
+        input, textarea {
             width: 100%;
             padding: 14px;
             border-radius: 16px;
@@ -60,6 +60,7 @@
             color: var(--text-primary);
             margin-bottom: 16px;
             font-size: 16px;
+            resize: vertical;
         }
         button {
             width: 100%;
@@ -120,12 +121,13 @@
             color: var(--text-secondary);
             margin-bottom: 10px;
         }
-        .post-reply {
-            background: var(--official-reply-bg);
+        .official-reply {
+            background: var(--official-bg);
             padding: 10px;
             border-radius: 12px;
             margin-bottom: 12px;
             font-size: 14px;
+            font-weight: 500;
         }
         .comment-list {
             margin: 12px 0;
@@ -143,6 +145,10 @@
             justify-content: space-between;
             align-items: flex-start;
         }
+        .comment-item.official {
+            background: var(--official-bg);
+            font-weight: 500;
+        }
         .comment-time {
             font-size: 11px;
             color: var(--text-secondary);
@@ -155,6 +161,15 @@
             background: var(--btn-danger);
             border-radius: 8px;
             margin-left: 10px;
+        }
+        .official-reply-box {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px dashed var(--border-color);
+        }
+        .official-reply-box textarea {
+            min-height: 60px;
+            margin-bottom: 8px;
         }
         .btn-group {
             display: flex;
@@ -253,15 +268,16 @@
                 </div>
                 <div class="post-content">${p.content}</div>
                 <div class="post-time">${new Date(p.created_at).toLocaleString()}</div>
-                ${p.reply ? `<div class="post-reply"><b>官方回复：</b>${p.reply}</div>` : ''}
+                
+                ${p.reply ? `<div class="official-reply"><b>官方回复：</b>${p.reply}</div>` : ''}
                 
                 ${postComments.length>0 ? `
                 <div class="comment-list">
-                    <div style="margin-bottom:8px;color:var(--text-secondary);">用户评论 (${postComments.length})：</div>
+                    <div style="margin-bottom:8px;color:var(--text-secondary);">全部回复 (${postComments.length})：</div>
                     ${postComments.map(c=>`
-                        <div class="comment-item">
+                        <div class="comment-item ${c.is_official ? 'official' : ''}">
                             <div>
-                                ${c.content}
+                                ${c.is_official ? '<b>官方回复：</b>' : ''}${c.content}
                                 <div class="comment-time">${new Date(c.created_at).toLocaleString()}</div>
                             </div>
                             <button class="del-comment-btn" onclick="deleteComment(${c.id})">删除</button>
@@ -269,7 +285,13 @@
                     `).join('')}
                 </div>` : ''}
                 
-                <div class="btn-group">
+                <!-- 🔴 新增：官方回复输入框 -->
+                <div class="official-reply-box">
+                    <textarea id="officialReply${p.id}" placeholder="输入官方回复内容..."></textarea>
+                    <button class="btn-primary" onclick="sendOfficialReply(${p.id})">发送官方回复</button>
+                </div>
+                
+                <div class="btn-group" style="margin-top:12px;">
                     <button class="${p.allow_publish ? 'btn-danger' : 'btn-success'}" 
                             onclick="toggleComment(${p.id}, ${p.allow_publish})">
                         ${p.allow_publish ? '关闭评论' : '开启评论'}
@@ -278,6 +300,29 @@
                 </div>
             </div>`;
         }).join('');
+    }
+
+    // 🔴 新增：发送官方回复
+    async function sendOfficialReply(postId){
+        const input = document.getElementById(`officialReply${postId}`);
+        const content = input.value.trim();
+        if(!content) return alert('请输入回复内容');
+
+        const {error} = await supabaseClient
+            .from('comments')
+            .insert([{
+                post_id: postId, 
+                content: content,
+                is_official: true // 标记为官方回复
+            }]);
+        
+        if(error){
+            alert('回复失败：'+error.message);
+            return;
+        }
+
+        input.value = '';
+        loadAllPosts(); // 重新加载显示新回复
     }
 
     // 切换评论状态
@@ -296,7 +341,7 @@
 
     // 删除帖子
     async function deletePost(id){
-        if(!confirm('确定要删除这条帖子吗？所有评论也会被一起删除！此操作不可恢复！'))return;
+        if(!confirm('确定要删除这条帖子吗？所有回复也会被一起删除！此操作不可恢复！'))return;
         
         const {error} = await supabaseClient
             .from('posts')
@@ -312,7 +357,7 @@
 
     // 删除评论
     async function deleteComment(id){
-        if(!confirm('确定要删除这条评论吗？'))return;
+        if(!confirm('确定要删除这条回复吗？'))return;
         
         const {error} = await supabaseClient
             .from('comments')

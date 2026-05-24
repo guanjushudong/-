@@ -23,7 +23,7 @@
             --notice-bg: linear-gradient(90deg, rgba(201,168,137,0.45), rgba(180,145,120,0.35));
             --like-gray: #aaa;
             --like-red: #ff4d4f;
-            --official-reply-bg: rgba(201,168,137,0.15);
+            --official-bg: rgba(201,168,137,0.15);
         }
         [data-theme="day"] {
             --bg-main: #f8efe8;
@@ -35,7 +35,7 @@
             --notice-bg: linear-gradient(90deg, rgba(221,186,156,0.6), rgba(200,160,130,0.5));
             --like-gray: #888;
             --like-red: #ff4d4f;
-            --official-reply-bg: rgba(201,168,137,0.2);
+            --official-bg: rgba(201,168,137,0.2);
         }
         body {
             background: var(--bg-main);
@@ -68,7 +68,10 @@
         .comment-close-tip {font-size:13px;color:var(--text-secondary);margin-bottom:8px;}
         .comment-list {margin-top:10px;}
         .comment-item {font-size:14px;color:var(--text-primary);line-height:1.6;margin:8px 0;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,0.05);}
-        .official-reply {background:var(--official-reply-bg);font-weight:500;}
+        .comment-item.official {
+            background: var(--official-bg);
+            font-weight: 500;
+        }
         .comment-time {font-size:11px;color:var(--text-secondary);margin-top:4px;}
         .links {text-align:center;margin-top:30px;font-size:14px;}
         .links a {color:var(--text-secondary);text-decoration:none;}
@@ -143,10 +146,10 @@
                         <button class="comment-send" onclick="sendComment(${p.id})">发送</button>
                     </div>`:`<div class="comment-close-tip">💬 评论已关闭（仅查看历史回复）</div>`}
                     <div class="comment-list">
-                        ${p.reply ? `<div class="comment-item official-reply"><b>官方回复：</b>${p.reply}</div>` : ''}
+                        ${p.reply ? `<div class="comment-item official"><b>官方回复：</b>${p.reply}</div>` : ''}
                         ${postComments.map(c=>`
-                            <div class="comment-item">
-                                ${c.content}
+                            <div class="comment-item ${c.is_official ? 'official' : ''}">
+                                ${c.is_official ? '<b>官方回复：</b>' : ''}${c.content}
                                 <div class="comment-time">${new Date(c.created_at).toLocaleString()}</div>
                             </div>
                         `).join('')}
@@ -170,7 +173,7 @@
         loadPosts();
     }
 
-    // 🔴 真正的评论提交功能
+    // 用户评论提交
     async function sendComment(postId){
         const input=document.getElementById(`c${postId}`);
         const content=input.value.trim();
@@ -178,7 +181,7 @@
 
         const {error}=await supabaseClient
             .from('comments')
-            .insert([{post_id:postId, content}]);
+            .insert([{post_id:postId, content:content, is_official:false}]);
         
         if(error){
             alert('评论失败：'+error.message);
@@ -186,7 +189,7 @@
         }
 
         input.value='';
-        loadPosts(); // 重新加载显示新评论
+        loadPosts();
     }
 
     document.querySelectorAll('.filter-btn').forEach(btn=>{

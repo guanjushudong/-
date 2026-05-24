@@ -7,8 +7,20 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {margin:0;padding:0;box-sizing:border-box;font-family:"PingFang SC","Microsoft YaHei",sans-serif;}
-        :root {--bg-main:#38322d;--text-primary:#fff8f0;--text-secondary:#e6d9cc;--border-color:rgba(255,240,225,0.22);}
-        [data-theme="day"]{--bg-main:#f8efe8;--text-primary:#4a3c30;--text-secondary:#6d5b4b;--border-color:rgba(160,125,95,0.3);}
+        :root {
+            --bg-main:#38322d;
+            --text-primary:#fff8f0;
+            --text-secondary:#e6d9cc;
+            --border-color:rgba(255,240,225,0.22);
+            --official-bg:rgba(201,168,137,0.15);
+        }
+        [data-theme="day"]{
+            --bg-main:#f8efe8;
+            --text-primary:#4a3c30;
+            --text-secondary:#6d5b4b;
+            --border-color:rgba(160,125,95,0.3);
+            --official-bg:rgba(201,168,137,0.2);
+        }
         body{background:var(--bg-main);padding:20px 16px;min-height:100vh;}
         .container{max-width:800px;margin:0 auto;}
         h1{text-align:center;color:var(--text-primary);margin-bottom:20px;}
@@ -17,7 +29,12 @@
         #result{margin-top:24px;}
         .post-card{background:rgba(255,255,255,0.08);border:1px solid var(--border-color);border-radius:20px;padding:20px;margin:16px 0;color:var(--text-primary);}
         .del-btn{background:#ff4d4f;margin-top:10px;}
-        .comment-item{background:rgba(255,255,255,0.08);padding:10px;border-radius:14px;margin:8px 0;}
+        .comment-item{background:rgba(255,255,255,0.05);padding:10px;border-radius:12px;margin:8px 0;font-size:14px;}
+        .comment-item.official{
+            background: var(--official-bg);
+            font-weight: 500;
+        }
+        .comment-time{font-size:11px;color:var(--text-secondary);margin-top:4px;}
         .links{text-align:center;margin-top:30px;}
         .links a{color:var(--text-secondary);text-decoration:none;}
     </style>
@@ -41,15 +58,33 @@
     async function searchPost(){
         const secret=secretInput.value.trim();if(!secret)return alert('请输入暗号');
         try{
-            const {data}=await supabaseClient.from('posts').select('*').eq('secret_code',secret).single();
-            if(!data)return result.innerHTML='<p style="color:var(--text-primary);text-align:center;">未找到投稿</p>';
+            const {data:post}=await supabaseClient.from('posts').select('*').eq('secret_code',secret).single();
+            if(!post)return result.innerHTML='<p style="color:var(--text-primary);text-align:center;">未找到投稿</p>';
+            
+            // 加载该帖子的所有评论
+            const {data:comments}=await supabaseClient
+                .from('comments')
+                .select('*')
+                .eq('post_id', post.id)
+                .order('created_at',{ascending:true});
+
             result.innerHTML=`
             <div class="post-card">
-                <div><b>分类：</b>${data.tag}</div>
-                <div style="margin:10px 0;"><b>内容：</b>${data.content}</div>
-                <div><b>点赞：</b>${data.like_count||0}</div>
-                <div style="margin-top:10px;"><b>官方回复：</b>${data.reply||'暂无回复'}</div>
-                <button class="del-btn" onclick="deletePost(${data.id},'${secret}')">🗑️ 删除</button>
+                <div><b>分类：</b>${post.tag}</div>
+                <div style="margin:10px 0;"><b>内容：</b>${post.content}</div>
+                <div><b>点赞：</b>${post.like_count||0}</div>
+                
+                <div style="margin-top:15px;margin-bottom:8px;"><b>全部回复：</b></div>
+                ${post.reply ? `<div class="comment-item official"><b>官方回复：</b>${post.reply}</div>` : ''}
+                ${comments.map(c=>`
+                    <div class="comment-item ${c.is_official ? 'official' : ''}">
+                        ${c.is_official ? '<b>官方回复：</b>' : ''}${c.content}
+                        <div class="comment-time">${new Date(c.created_at).toLocaleString()}</div>
+                    </div>
+                `).join('')}
+                ${!post.reply && comments.length===0 ? '<div class="comment-item" style="color:var(--text-secondary)">暂无回复</div>' : ''}
+                
+                <button class="del-btn" onclick="deletePost(${post.id},'${secret}')">🗑️ 删除我的投稿</button>
             </div>`;
         }catch(e){result.innerHTML='<p style="color:var(--text-primary);text-align:center;">未找到投稿</p>';}
     }
